@@ -91,17 +91,29 @@ public class SymbolTable
 	/***********************************************/
 	/* Find the inner-most scope element with name */
 	/***********************************************/
-	// TODO: Also search class members when inside a class (PDF 2.7 - Name resolution)
+	// PDF 2.7 - Name resolution:
+	// 1. Search local scopes (symbol table)
+	// 2. If inside class and not found, search class hierarchy (dataMembers)
+	// 3. Finally global scope
 	public Type find(String name)
 	{
 		SymbolTableEntry e;
 				
+		// Step 1: Search in symbol table (local → global)
 		for (e = table[hash(name)]; e != null; e = e.next)
 		{
 			if (name.equals(e.name))
 			{
 				return e.type;
 			}
+		}
+		
+		// Step 2: If inside a class, search class hierarchy
+		if (curClass != null)
+		{
+			// TODO: When TypeClass.findMember() is implemented:
+			// Type t = curClass.findMember(name);
+			// if (t != null) return t;
 		}
 		
 		return null;
@@ -175,20 +187,32 @@ public class SymbolTable
 	/******************************************/
 	/* Check if name exists in current scope  */
 	/******************************************/
-	// TODO: PDF 2.7 - Identifier may appear only once in a given scope
+	// PDF 2.7 - Identifier may appear only once in a given scope
 	public boolean existsInCurrentScope(String name)
 	{
-		// TODO: Implement - return findInCurrentScope(name) != null
-		return false;
+		return findInCurrentScope(name) != null;
 	}
 
 	/******************************************/
 	/* Find name in current scope only        */
 	/******************************************/
-	// TODO: PDF 2.7 - For duplicate declaration check
+	// PDF 2.7 - For duplicate declaration check
+	// Walks from top until SCOPE-BOUNDARY
 	public Type findInCurrentScope(String name)
 	{
-		// TODO: Implement - walk from top until SCOPE-BOUNDARY
+		for (SymbolTableEntry e = top; e != null; e = e.prevtop)
+		{
+			// Reached scope boundary - not found in current scope
+			if (e.name.equals("SCOPE-BOUNDARY"))
+			{
+				return null;
+			}
+			// Found the name in current scope
+			if (e.name.equals(name))
+			{
+				return e.type;
+			}
+		}
 		return null;
 	}
 
@@ -291,15 +315,10 @@ public class SymbolTable
 	/*                    SPECIALIZED LOOKUPS                           */
 	/*==================================================================*/
 
-	/******************************************/
-	/* Find until class scope boundary        */
-	/******************************************/
-	// TODO: PDF 2.7 - Class declaration and data members access
-	public Type findUntilClassScope(String name)
-	{
-		// TODO: Implement - search until reaching class scope boundary
-		return null;
-	}
+	// NOTE: Shadowing checks (PDF 2.2) will be in TypeClass:
+	// - TypeClass.findMember(name) - for field shadowing (field can't shadow field OR method)
+	// - TypeClass.findField(name) - for method shadowing (method can't shadow field)
+	// - Signature matching for method override in TypeFunction
 
 	/******************************************/
 	/* Find only in class scope               */
