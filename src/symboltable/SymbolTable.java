@@ -233,11 +233,10 @@ public class SymbolTable
 	/******************************************/
 	/* Check if at class fields level         */
 	/******************************************/
-	// TODO: PDF 2.3 - For constant expression enforcement in array allocation
+	// True if inside class but NOT inside a method
 	public boolean inClassFieldsLevel()
 	{
-		// TODO: Implement - check if directly in class (not in method)
-		return false;
+		return curClass != null && currFunc == null;
 	}
 
 	/*==================================================================*/
@@ -247,19 +246,21 @@ public class SymbolTable
 	/******************************************/
 	/* Begin function scope                   */
 	/******************************************/
-	// TODO: PDF 2.5 - Function scope for parameters and local variables
 	public void beginFuncScope(TypeFunction func)
 	{
-		// TODO: Implement - beginScope() + set returnType + set currFunc
+		beginScope();
+		this.currFunc = func;
+		this.returnType = func.returnType;
 	}
 
 	/******************************************/
 	/* End function scope                     */
 	/******************************************/
-	// TODO: PDF 2.5 - Exit function scope
 	public void endFuncScope()
 	{
-		// TODO: Implement - endScope() + set returnType = null + set currFunc = null
+		endScope();
+		this.currFunc = null;
+		this.returnType = null;
 	}
 
 	/******************************************/
@@ -276,6 +277,14 @@ public class SymbolTable
 	public TypeFunction getCurrFunc()
 	{
 		return currFunc;
+	}
+	
+	/******************************************/
+	/* Check if we are inside a function      */
+	/******************************************/
+	public boolean insideFunction()
+	{
+		return currFunc != null;
 	}
 
 	/*==================================================================*/
@@ -324,15 +333,22 @@ public class SymbolTable
 	}
 	
 	/******************************************/
-	/* Find a class type by name              */
-	/* For "new ClassName" expressions        */
+	/* Find a type that can be allocated      */
+	/* For "new T" (class) or "new T[size]"   */
+	/* defined class or array type            */
 	/******************************************/
-	public TypeClass findClass(String className)
+	public Type findNewableType(String typeName)
 	{
-		Type t = find(className);
-		if (t instanceof TypeClass) {
-			return (TypeClass) t;
+		Type t = find(typeName);
+		if (t == null) {
+			return null;
 		}
+		if (t instanceof TypeClass) {
+			return t;
+		}
+		// TODO: When TypeArray is created, add:
+		// if (t instanceof TypeArray) { return t; }
+		// Array types can be allocated with "new T[size]"
 		return null;
 	}
 
@@ -343,21 +359,24 @@ public class SymbolTable
 	/******************************************/
 	/* Check if assignment is valid           */
 	/******************************************/
-	// TODO: PDF 2.4 - Assignment compatibility (primitives, arrays, classes, nil)
+	// PDF 2.4 - Wrapper that delegates to Type
 	public boolean canAssign(Type varType, Type valType)
 	{
-		// TODO: Implement - delegate to Type.canBeAssignedFrom()
+		// TODO: Delegate to Type method when implemented
+		// return varType.canBeAssignedFrom(valType);
 		return false;
 	}
 
 	/******************************************/
 	/* Check if return type is valid          */
 	/******************************************/
-	// TODO: PDF 2.5 - Return statement must match function return type
+	// PDF 2.5 - Return statement must match function return type
 	public boolean canReturnType(Type type)
 	{
-		// TODO: Implement - if returnType == null return false, else canAssign(returnType, type)
-		return false;
+		if (returnType == null) {
+			return false;
+		}
+		return canAssign(returnType, type);
 	}
 	
 	public static int n=0;
