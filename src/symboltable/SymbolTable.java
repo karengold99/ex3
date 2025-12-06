@@ -167,11 +167,9 @@ public class SymbolTable
 	/******************************************/
 	/* Check if we are at global scope        */
 	/******************************************/
-	// TODO: PDF 2.1 - Class and array definitions may appear only in global scope
 	public boolean isGlobalScope()
 	{
-		// TODO: Implement - return curScopeDepth == 0
-		return false;
+		return curScopeDepth == 0;
 	}
 
 	/******************************************/
@@ -201,19 +199,19 @@ public class SymbolTable
 	/******************************************/
 	/* Begin class scope                      */
 	/******************************************/
-	// TODO: PDF 2.2 - Class scope for fields and methods
 	public void beginClassScope(TypeClass classType)
 	{
-		// TODO: Implement - beginScope() + set curClass
+		beginScope();
+		this.curClass = classType;
 	}
 
 	/******************************************/
 	/* End class scope                        */
 	/******************************************/
-	// TODO: PDF 2.2 - Exit class scope
 	public void endClassScope()
 	{
-		// TODO: Implement - endScope() + set curClass = null
+		endScope();
+		this.curClass = null;
 	}
 
 	/******************************************/
@@ -227,11 +225,9 @@ public class SymbolTable
 	/******************************************/
 	/* Get the enclosing class                */
 	/******************************************/
-	// TODO: PDF 2.2 - For checking method overriding
 	public TypeClass getEnclosingClass()
 	{
-		// TODO: Implement - return curClass
-		return null;
+		return curClass;
 	}
 
 	/******************************************/
@@ -299,31 +295,44 @@ public class SymbolTable
 	/******************************************/
 	/* Find only in class scope               */
 	/******************************************/
-	// TODO: PDF 2.2 - For v.field access (AST_VAR_FIELD)
 	public Type findOnlyInClassScope(String name)
 	{
-		// TODO: Implement - search only in class scope, not nested scopes
-		return null;
+		SymbolTableEntry e = top;
+		Type result = null;
+		
+		while (e != null)
+		{
+			if (e.name.equals("SCOPE-BOUNDARY") && 
+				e.prevtop != null && 
+				e.prevtop.type instanceof TypeClass)
+			{
+				break;
+			}
+			if (e.name.equals("SCOPE-BOUNDARY"))
+			{
+				result = null;
+			}
+			else if (name.equals(e.name))
+			{
+				result = e.type;
+			}
+			
+			e = e.prevtop;
+		}
+		
+		return result;
 	}
-
-	/******************************************/
-	/* Find in global scope only              */
-	/******************************************/
-	// TODO: PDF 2.1 - For type lookups (class/array types are global)
-	public Type findInGlobalScope(String name)
-	{
-		// TODO: Implement - search only in global scope
-		return null;
-	}
-
+	
 	/******************************************/
 	/* Find a class type by name              */
 	/* For "new ClassName" expressions        */
 	/******************************************/
-	// TODO: PDF 2.2 - Allocating a class with "new T"
 	public TypeClass findClass(String className)
 	{
-		// TODO: Implement - find() + check instanceof TypeClass
+		Type t = find(className);
+		if (t instanceof TypeClass) {
+			return (TypeClass) t;
+		}
 		return null;
 	}
 
