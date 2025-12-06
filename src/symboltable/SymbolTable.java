@@ -27,6 +27,14 @@ public class SymbolTable
 	private SymbolTableEntry top;
 	private int topIndex = 0;
 	
+	/*******************/
+	/* Context State   */
+	/*******************/
+	private int curScopeDepth = 0;
+	private TypeClass curClass = null;
+	private Type returnType = null;
+	private TypeFunction currFunc = null;
+	
 	/**************************************************************/
 	/* A very primitive hash function for exposition purposes ... */
 	/**************************************************************/
@@ -62,7 +70,7 @@ public class SymbolTable
 		/**************************************************************************/
 		/* [3] Prepare a new symbol table entry with name, type, next and prevtop */
 		/**************************************************************************/
-		SymbolTableEntry e = new SymbolTableEntry(name,t,hashValue,next,top, topIndex++);
+		SymbolTableEntry e = new SymbolTableEntry(name, t, hashValue, next, curScopeDepth, top, topIndex++);
 
 		/**********************************************/
 		/* [4] Update the top of the symbol table ... */
@@ -83,6 +91,7 @@ public class SymbolTable
 	/***********************************************/
 	/* Find the inner-most scope element with name */
 	/***********************************************/
+	// TODO: Also search class members when inside a class (PDF 2.7 - Name resolution)
 	public Type find(String name)
 	{
 		SymbolTableEntry e;
@@ -112,6 +121,8 @@ public class SymbolTable
 		enter(
 			"SCOPE-BOUNDARY",
 			new TypeForScopeBoundaries("NONE"));
+		
+		curScopeDepth++;
 
 		/*********************************************/
 		/* Print the symbol table after every change */
@@ -140,11 +151,204 @@ public class SymbolTable
 		table[top.index] = top.next;
 		topIndex = topIndex -1;
 		top = top.prevtop;
+		
+		curScopeDepth--;
 
 		/*********************************************/
 		/* Print the symbol table after every change */		
 		/*********************************************/
 		printMe();
+	}
+
+	/*==================================================================*/
+	/*                    SCOPE QUERIES                                 */
+	/*==================================================================*/
+
+	/******************************************/
+	/* Check if we are at global scope        */
+	/******************************************/
+	// TODO: PDF 2.1 - Class and array definitions may appear only in global scope
+	public boolean isGlobalScope()
+	{
+		// TODO: Implement - return curScopeDepth == 0
+		return false;
+	}
+
+	/******************************************/
+	/* Check if name exists in current scope  */
+	/******************************************/
+	// TODO: PDF 2.7 - Identifier may appear only once in a given scope
+	public boolean existsInCurrentScope(String name)
+	{
+		// TODO: Implement - return findInCurrentScope(name) != null
+		return false;
+	}
+
+	/******************************************/
+	/* Find name in current scope only        */
+	/******************************************/
+	// TODO: PDF 2.7 - For duplicate declaration check
+	public Type findInCurrentScope(String name)
+	{
+		// TODO: Implement - walk from top until SCOPE-BOUNDARY
+		return null;
+	}
+
+	/*==================================================================*/
+	/*                    CLASS SCOPE                                   */
+	/*==================================================================*/
+
+	/******************************************/
+	/* Begin class scope                      */
+	/******************************************/
+	// TODO: PDF 2.2 - Class scope for fields and methods
+	public void beginClassScope(TypeClass classType)
+	{
+		// TODO: Implement - beginScope() + set curClass
+	}
+
+	/******************************************/
+	/* End class scope                        */
+	/******************************************/
+	// TODO: PDF 2.2 - Exit class scope
+	public void endClassScope()
+	{
+		// TODO: Implement - endScope() + set curClass = null
+	}
+
+	/******************************************/
+	/* Check if inside a class                */
+	/******************************************/
+	public boolean insideClass()
+	{
+		return curClass != null;
+	}
+
+	/******************************************/
+	/* Get the enclosing class                */
+	/******************************************/
+	// TODO: PDF 2.2 - For checking method overriding
+	public TypeClass getEnclosingClass()
+	{
+		// TODO: Implement - return curClass
+		return null;
+	}
+
+	/******************************************/
+	/* Check if at class fields level         */
+	/******************************************/
+	// TODO: PDF 2.3 - For constant expression enforcement in array allocation
+	public boolean inClassFieldsLevel()
+	{
+		// TODO: Implement - check if directly in class (not in method)
+		return false;
+	}
+
+	/*==================================================================*/
+	/*                    FUNCTION SCOPE                                */
+	/*==================================================================*/
+
+	/******************************************/
+	/* Begin function scope                   */
+	/******************************************/
+	// TODO: PDF 2.5 - Function scope for parameters and local variables
+	public void beginFuncScope(TypeFunction func)
+	{
+		// TODO: Implement - beginScope() + set returnType + set currFunc
+	}
+
+	/******************************************/
+	/* End function scope                     */
+	/******************************************/
+	// TODO: PDF 2.5 - Exit function scope
+	public void endFuncScope()
+	{
+		// TODO: Implement - endScope() + set returnType = null + set currFunc = null
+	}
+
+	/******************************************/
+	/* Get current function return type       */
+	/******************************************/
+	public Type getReturnType()
+	{
+		return returnType;
+	}
+
+	/******************************************/
+	/* Get current function                   */
+	/******************************************/
+	public TypeFunction getCurrFunc()
+	{
+		return currFunc;
+	}
+
+	/*==================================================================*/
+	/*                    SPECIALIZED LOOKUPS                           */
+	/*==================================================================*/
+
+	/******************************************/
+	/* Find until class scope boundary        */
+	/******************************************/
+	// TODO: PDF 2.7 - Class declaration and data members access
+	public Type findUntilClassScope(String name)
+	{
+		// TODO: Implement - search until reaching class scope boundary
+		return null;
+	}
+
+	/******************************************/
+	/* Find only in class scope               */
+	/******************************************/
+	// TODO: PDF 2.2 - For v.field access (AST_VAR_FIELD)
+	public Type findOnlyInClassScope(String name)
+	{
+		// TODO: Implement - search only in class scope, not nested scopes
+		return null;
+	}
+
+	/******************************************/
+	/* Find in global scope only              */
+	/******************************************/
+	// TODO: PDF 2.1 - For type lookups (class/array types are global)
+	public Type findInGlobalScope(String name)
+	{
+		// TODO: Implement - search only in global scope
+		return null;
+	}
+
+	/******************************************/
+	/* Find a class type by name              */
+	/* For "new ClassName" expressions        */
+	/******************************************/
+	// TODO: PDF 2.2 - Allocating a class with "new T"
+	public TypeClass findClass(String className)
+	{
+		// TODO: Implement - find() + check instanceof TypeClass
+		return null;
+	}
+
+	/*==================================================================*/
+	/*                    TYPE CHECKING                                 */
+	/*==================================================================*/
+
+	/******************************************/
+	/* Check if assignment is valid           */
+	/******************************************/
+	// TODO: PDF 2.4 - Assignment compatibility (primitives, arrays, classes, nil)
+	public boolean canAssign(Type varType, Type valType)
+	{
+		// TODO: Implement - delegate to Type.canBeAssignedFrom()
+		return false;
+	}
+
+	/******************************************/
+	/* Check if return type is valid          */
+	/******************************************/
+	// TODO: PDF 2.5 - Return statement must match function return type
+	public boolean canReturnType(Type type)
+	{
+		// TODO: Implement - if returnType == null return false, else canAssign(returnType, type)
+		return false;
 	}
 	
 	public static int n=0;
@@ -268,7 +472,18 @@ public class SymbolTable
 					new TypeList(
 						TypeInt.getInstance(),
 						null)));
-			
+
+			/******************************************/
+			/* [4] Enter library function PrintString */
+			/******************************************/
+			instance.enter(
+				"PrintString",
+				new TypeFunction(
+					TypeVoid.getInstance(),
+					"PrintString",
+					new TypeList(
+						TypeString.getInstance(),
+						null)));
 		}
 		return instance;
 	}
