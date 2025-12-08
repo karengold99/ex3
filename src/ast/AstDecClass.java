@@ -1,10 +1,10 @@
 package ast;
 
 import types.*;
+import semantic.SemanticException;
 import symboltable.*;
 
-public class AstDecClass extends AstDec
-{
+public class AstDecClass extends AstDec {
 	/********/
 	/* NAME */
 	/********/
@@ -14,17 +14,17 @@ public class AstDecClass extends AstDec
 	/* DATA MEMBERS */
 	/****************/
 	public AstTypeNameList dataMembers;
-	
+
 	/******************/
 	/* CONSTRUCTOR(S) */
 	/******************/
-	public AstDecClass(String name, AstTypeNameList dataMembers)
-	{
+	public AstDecClass(int lineNumber, String name, AstTypeNameList dataMembers) {
+		super(lineNumber);
 		/******************************/
 		/* SET A UNIQUE SERIAL NUMBER */
 		/******************************/
 		serialNumber = AstNodeSerialNumber.getFresh();
-	
+
 		this.name = name;
 		this.dataMembers = dataMembers;
 	}
@@ -32,52 +32,52 @@ public class AstDecClass extends AstDec
 	/*********************************************************/
 	/* The printing message for a class declaration AST node */
 	/*********************************************************/
-	public void printMe()
-	{
+	@Override
+	public void printMe() {
 		/*************************************/
 		/* RECURSIVELY PRINT HEAD + TAIL ... */
 		/*************************************/
-		System.out.format("CLASS DEC = %s\n",name);
-		if (dataMembers != null) dataMembers.printMe();
-		
+		System.out.format("CLASS DEC = %s\n", name);
+		if (dataMembers != null)
+			dataMembers.printMe();
+
 		/***************************************/
 		/* PRINT Node to AST GRAPHVIZ DOT file */
 		/***************************************/
 		AstGraphviz.getInstance().logNode(
-                serialNumber,
-			String.format("CLASS\n%s",name));
-		
+				serialNumber,
+				String.format("CLASS\n%s", name));
+
 		/****************************************/
 		/* PRINT Edges to AST GRAPHVIZ DOT file */
 		/****************************************/
 		AstGraphviz.getInstance().logEdge(serialNumber, dataMembers.serialNumber);
 	}
-	
-	public Type semantMe()
-	{	
-		/*************************/
-		/* [1] Begin Class Scope */
-		/*************************/
+
+	@Override
+	public Type semantMe() throws SemanticException {
+		// Check class is not already declared in global scope
+		if (SymbolTable.getInstance().find(name) != null)
+			throw new SemanticException(lineNumber, "class '" + name + "' already defined");
+
+		// Insert empty class type BEFORE processing members
+		TypeClass emptyClass = new TypeClass(null, name, null);
+		SymbolTable.getInstance().enter(name, emptyClass);
+
+		// Begin class scope
 		SymbolTable.getInstance().beginScope();
 
-		/***************************/
-		/* [2] Semant Data Members */
-		/***************************/
-		TypeClass t = new TypeClass(null,name, dataMembers.semantMe());
+		// Semant data members
+		TypeList memberTypes = null;
+		if (dataMembers != null)
+			memberTypes = dataMembers.semantMe();
 
-		/*****************/
-		/* [3] End Scope */
-		/*****************/
+		// End class scope
 		SymbolTable.getInstance().endScope();
 
-		/************************************************/
-		/* [4] Enter the Class Type to the Symbol Table */
-		/************************************************/
-		SymbolTable.getInstance().enter(name,t);
+		// Update existing class entry
+		emptyClass.dataMembers = memberTypes; 
 
-		/*********************************************************/
-		/* [5] Return value is irrelevant for class declarations */
-		/*********************************************************/
-		return null;		
+		return null; // class declarations return null
 	}
 }
