@@ -7,13 +7,19 @@ public abstract class Type
 	/******************************/
 	public String name;
 
-	/*************/
-	/* isClass() */
-	/*************/
-	public boolean isClass(){ return false;}
 
-	/*************/
-	/* isArray() */
-	/*************/
-	public boolean isArray(){ return false;}
+	/*==================================================================*/
+    /*                    TYPE CHECKS                                   */
+    /*==================================================================*/
+	public boolean isClass() { return false; }
+    public boolean isArray() { return false; }
+    public boolean isFunction() { return false; }
+    public boolean isVoid() { return false; }
+    public boolean isNil() { return false; }
+
+	/*==================================================================*/
+    /*                    VISITOR PATTERN                               */
+    /*==================================================================*/
+	public abstract <R> R accept(TypeVisitor<R> visitor);
+	
 }
