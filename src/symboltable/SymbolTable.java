@@ -371,32 +371,6 @@ public class SymbolTable
 		return null;
 	}
 
-	/*==================================================================*/
-	/*                    TYPE CHECKING                                 */
-	/*==================================================================*/
-
-	/******************************************/
-	/* Check if assignment is valid           */
-	/******************************************/
-	// PDF 2.4 - Wrapper that delegates to Type
-	public boolean canAssign(Type varType, Type valType)
-	{
-		// TODO: Delegate to Type method when implemented
-		// return varType.canBeAssignedFrom(valType);
-		return false;
-	}
-
-	/******************************************/
-	/* Check if return type is valid          */
-	/******************************************/
-	// PDF 2.5 - Return statement must match function return type
-	public boolean canReturnType(Type type)
-	{
-		if (returnType == null) {
-			return false;
-		}
-		return canAssign(returnType, type);
-	}
 	
 	public static int n=0;
 	
