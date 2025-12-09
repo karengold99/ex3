@@ -4,12 +4,16 @@ public class TypeArray extends Type
 {
     public Type elementType;
 
-    public TypeArray(String name, Type elementType)
+    public TypeArray(Type elementType)
     {
-        this.name = name;
+        super(elementType)
         this.elementType = elementType;
     }
 
+
+    /*==================================================================*/
+    /*                    TYPE CHECKS                                   */
+    /*==================================================================*/
     @Override
     public boolean isArray() { return true; }
 

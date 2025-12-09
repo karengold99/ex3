@@ -10,7 +10,10 @@ public class TypeInt extends Type
 	/*****************************/
 	/* PREVENT INSTANTIATION ... */
 	/*****************************/
-	protected TypeInt() {}
+	protected TypeInt() 
+	{
+		super("int");
+	}
 
 	/******************************/
 	/* GET SINGLETON INSTANCE ... */
@@ -20,10 +23,15 @@ public class TypeInt extends Type
 		if (instance == null)
 		{
 			instance = new TypeInt();
-			instance.name = "int";
 		}
 		return instance;
 	}
+	/*==================================================================*/
+	/*                    TYPE CHECKS                                   */
+	/*==================================================================*/
+	@Override
+	public boolean isInt() { return true; }
+	
 	/*==================================================================*/
     /*                    VISITOR PATTERN                               */
     /*==================================================================*/

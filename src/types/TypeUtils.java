@@ -5,28 +5,44 @@ public class TypeUtils
     /** Check if value can be assigned to target */
     public static boolean canAssignTo(Type value, Type target)
     {
-        // TODO: implement using AssignmentChecker
+        if (value == target)
+        {
+            return true;
+        }
+        if (value.isNil() && (target.isClass()||target.isArray()))
+        {
+            return true;
+        }
+        if (value.isClass() && target.isClass())
+        {
+            TypeClass valueClass = (TypeClass)value;
+            TypeClass targetClass = (TypeClass)target;
+            return targetClass.isAncestorOf(valueClass);
+        }
         return false;
     }
 
     /** Check if expr type can be returned from function */
     public static boolean canReturn(Type exprType, Type returnType)
     {
-        // TODO: implement
-        return false;
+        return canAssignTo(exprType, returnType);
     }
 
     /** Check if child extends parent */
     public static boolean isChild(Type child, Type parent)
     {
-        // TODO: implement
-        return false;
+        if (!(child instanceof TypeClass) || !(parent instanceof TypeClass))
+        {
+            return false;
+        }
+        TypeClass childClass = (TypeClass) child;
+        TypeClass parentClass = (TypeClass) parent;
+        return parentClass.isAncestorOf(childClass);
     }
 
     /** Check if type is int or string */
     public static boolean isIntOrString(Type t)
     {
-        // TODO: implement
-        return false;
+        return t.isInt() || t.isString();
     }
 }

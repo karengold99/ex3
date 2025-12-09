@@ -7,11 +7,14 @@ public class TypeFunction extends Type
     
     public TypeFunction(Type returnType, String name, TypeList params)
     {
-        this.name = name;
+        super(name);
         this.returnType = returnType;
         this.params = params;
     }
 
+    /*==================================================================*/
+    /*                    TYPE CHECK                                    */
+    /*==================================================================*/
     @Override
     public boolean isFunction() { return true; }
 
@@ -21,14 +24,36 @@ public class TypeFunction extends Type
     /** Check if signatures match (for method override) */
     public boolean signatureMatches(TypeFunction other)
     {
-        // TODO: implement
-        return false;
+        if (this.returnType != other.returnType)
+        {
+            return false;
+        }
+        if (this.paramCount() != other.paramCount())
+        {
+            return false;
+        }
+        TypeList p1 = this.params;
+        TypeList p2 = other.params;
+        while (p1 != null && p2 != null)
+        {
+            if (p1.head != p2.head)
+            {
+                return false;
+            }
+            p1 = p1.tail;
+            p2 = p2.tail;
+        }
+        return true;
     }
 
     /** Get number of parameters */
     public int paramCount()
     {
-        // TODO: implement
-        return 0;
+        int count = 0;
+        for (TypeList it = params; it != null; it = it.tail) 
+        {
+            count++;
+        }
+        return count;
     }
 }
