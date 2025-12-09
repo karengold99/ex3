@@ -49,10 +49,10 @@ public class TypeClass extends Type
         for(TypeClassVarDecList it = dataMembers; it != null; it = it.tail)
         {
             TypeClassVarDec dec = it.head;
-            if (dec.name.equals(memberName) && dec!= null)
-            {
+        if (dec != null && dec.name.equals(memberName))            
+        {
                 return dec;
-            }
+        }
         }
         return null;
     }
