@@ -10,9 +10,11 @@ public class TypeVoid extends Type
 	/*****************************/
 	/* PREVENT INSTANTIATION ... */
 	/*****************************/
-	protected TypeVoid() {}
-	@Override
-	public boolean isVoid() {return true;}
+	protected TypeVoid() 
+	{
+		super("void");
+	}
+	
 
 	/******************************/
 	/* GET SINGLETON INSTANCE ... */
@@ -22,7 +24,6 @@ public class TypeVoid extends Type
 		if (instance == null)
 		{
 			instance = new TypeVoid();
-			instance.name = "void";
 		}
 		return instance;
 	}
@@ -32,4 +33,9 @@ public class TypeVoid extends Type
 	@Override
     public <R> R accept(TypeVisitor<R> visitor) { return visitor.visit(this); }
 
+	/*==================================================================*/
+	/*                    TYPE CHECKS                                   */
+	/*==================================================================*/
+	@Override
+	public boolean isVoid() {return true;}
 }

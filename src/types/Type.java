@@ -7,11 +7,18 @@ public abstract class Type
 	/******************************/
 	public String name;
 
+    /*  constructor */
+    protected Type(String name) 
+    {
+        this.name = name;
+    }
 
 	/*==================================================================*/
     /*                    TYPE CHECKS                                   */
     /*==================================================================*/
-	public boolean isClass() { return false; }
+	public boolean isInt() { return false; }
+    public boolean isString() { return false; }
+    public boolean isClass() { return false; }
     public boolean isArray() { return false; }
     public boolean isFunction() { return false; }
     public boolean isVoid() { return false; }
@@ -21,5 +28,12 @@ public abstract class Type
     /*                    VISITOR PATTERN                               */
     /*==================================================================*/
 	public abstract <R> R accept(TypeVisitor<R> visitor);
+
+    /*  toString */
+    @Override
+    public String toString() 
+    {
+        return name;
+    }
 	
 }

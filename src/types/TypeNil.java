@@ -10,7 +10,10 @@ public class TypeNil extends Type
     /*****************************/
     /* PREVENT INSTANTIATION ... */
     /*****************************/
-    protected TypeNil() {}
+    protected TypeNil() 
+    {
+        super("nil");
+    }
 
     /******************************/
     /* GET SINGLETON INSTANCE ... */
@@ -20,11 +23,13 @@ public class TypeNil extends Type
         if (instance == null)
         {
             instance = new TypeNil();
-            instance.name = "nil";
         }
         return instance;
     }
 
+    /*==================================================================*/
+    /*                    TYPE CHECKS                                   */
+    /*==================================================================*/
     @Override
     public boolean isNil() {return true;}
 

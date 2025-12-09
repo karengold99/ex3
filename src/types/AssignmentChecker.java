@@ -16,49 +16,68 @@ public class AssignmentChecker implements TypeVisitor<Boolean>
     @Override
     public Boolean visit(TypeInt type)
     {
-        // TODO:
-        return false;
+        return valueType.isInt();
     }
 
     @Override
     public Boolean visit(TypeString type)
     {
-        // TODO:
-        return false;
+        return valueType.isString();
     }
 
     @Override
     public Boolean visit(TypeVoid type)
     {
-        // TODO:
         return false;
     }
 
     @Override
     public Boolean visit(TypeNil type)
     {
-        // TODO:
         return false;
     }
 
     @Override
     public Boolean visit(TypeClass type)
     {
-        // TODO:
-        return false;
+        if (valueType == type)
+        {
+            return true;
+        }
+        if (valueType.isNil())
+        {
+            return true;
+        }
+        if (valueType instanceof TypeClass)
+        {
+            TypeClass child = (TypeClass) valueType;
+            TypeClass parent = type;
+            return parent.isAncestorOf(child);
+        }
     }
 
     @Override
     public Boolean visit(TypeArray type)
     {
-        // TODO:
+        if (valueType == type)
+        {
+            return true;
+        }
+        if (valueType.isNil())
+        {
+            return true;
+        }
         return false;
     }
 
     @Override
     public Boolean visit(TypeFunction type)
     {
-        // TODO:
-        return false;
+        if(!valueType instanceof TypeFunction)
+        {
+            return false;
+        }
+        TypeFunction valueFunc = (TypeFunction) valueType;
+        return valueFunc.signatureMatches(type);
     }
 }
