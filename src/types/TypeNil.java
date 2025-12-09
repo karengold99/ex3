@@ -20,7 +20,6 @@ public class TypeNil extends Type
         if (instance == null)
         {
             instance = new TypeNil();
-            instance.name = "nil";
         }
         return instance;
     }
