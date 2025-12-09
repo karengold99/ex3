@@ -10,7 +10,7 @@ public class TypeNil extends Type
     /*****************************/
     /* PREVENT INSTANTIATION ... */
     /*****************************/
-    protected TypeNil() {}
+	protected TypeNil() { super("nil"); }
 
     /******************************/
     /* GET SINGLETON INSTANCE ... */
