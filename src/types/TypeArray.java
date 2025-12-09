@@ -6,7 +6,7 @@ public class TypeArray extends Type
 
     public TypeArray(Type elementType)
     {
-        super(elementType)
+        super("array");
         this.elementType = elementType;
     }
 

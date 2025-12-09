@@ -10,7 +10,7 @@ public class TypeVoid extends Type
 	/*****************************/
 	/* PREVENT INSTANTIATION ... */
 	/*****************************/
-	protected TypeVoid() {}
+	protected TypeVoid() { super("void"); }	
 	@Override
 	public boolean isVoid() {return true;}
 
@@ -22,7 +22,6 @@ public class TypeVoid extends Type
 		if (instance == null)
 		{
 			instance = new TypeVoid();
-			instance.name = "void";
 		}
 		return instance;
 	}

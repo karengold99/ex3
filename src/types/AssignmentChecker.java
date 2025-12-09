@@ -54,6 +54,7 @@ public class AssignmentChecker implements TypeVisitor<Boolean>
             TypeClass parent = type;
             return parent.isAncestorOf(child);
         }
+        return false;
     }
 
     @Override
@@ -73,7 +74,7 @@ public class AssignmentChecker implements TypeVisitor<Boolean>
     @Override
     public Boolean visit(TypeFunction type)
     {
-        if(!valueType instanceof TypeFunction)
+        if(!(valueType instanceof TypeFunction))
         {
             return false;
         }
