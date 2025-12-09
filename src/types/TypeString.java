@@ -10,10 +10,7 @@ public class TypeString extends Type
 	/*****************************/
 	/* PREVENT INSTANTIATION ... */
 	/*****************************/
-	protected TypeString() 
-	{
-		super("string");
-	}
+	protected TypeString() {}
 
 	/******************************/
 	/* GET SINGLETON INSTANCE ... */
