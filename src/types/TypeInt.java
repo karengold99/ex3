@@ -10,7 +10,7 @@ public class TypeInt extends Type
 	/*****************************/
 	/* PREVENT INSTANTIATION ... */
 	/*****************************/
-	protected TypeInt() {}
+	protected TypeInt() { super("int"); }
 
 	/******************************/
 	/* GET SINGLETON INSTANCE ... */
