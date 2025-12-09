@@ -27,10 +27,10 @@ public class TypeClassVarDecList
     /** Create inherited copy of all members */
     public TypeClassVarDecList inherit()
     {
-        TypeClassVarDecList newHead = null;
+        TypeClassVarDec newHead = null;
         if (this.head != null) 
         {
-            newHead = new TypeClassVarDecList(this.head.t, this.head.name, true);
+            newHead = new TypeClassVarDec(this.head.t, this.head.name, true);
         }
         TypeClassVarDecList newTail = null;
         if (this.tail != null) 
