@@ -1,6 +1,7 @@
 package ast;
 
 import types.*;
+import semantic.SemanticException;
 
 public class AstExpInt extends AstExp
 {
@@ -38,7 +39,8 @@ public class AstExpInt extends AstExp
 			String.format("INT(%d)",value));
 	}
 
-	public Type semantMe()
+	@Override
+	public Type semantMe() throws SemanticException
 	{
 		return TypeInt.getInstance();
 	}
