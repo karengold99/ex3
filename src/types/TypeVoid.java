@@ -25,10 +25,6 @@ public class TypeVoid extends Type
 		}
 		return instance;
 	}
-	/*==================================================================*/
-    /*                    VISITOR PATTERN                               */
-    /*==================================================================*/
-	@Override
-    public <R> R accept(TypeVisitor<R> visitor) { return visitor.visit(this); }
+
 
 }
