@@ -5,6 +5,10 @@ import semantic.SemanticException;
 
 public abstract class AstDec extends AstNode
 {
+    public AstDec() {
+        super();
+    }
+
     public AstDec(int lineNumber) {
         super(lineNumber);
     }
