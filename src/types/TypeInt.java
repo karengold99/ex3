@@ -25,9 +25,5 @@ public class TypeInt extends Type
 	}
 	@Override
 	public boolean isInt() { return true; }
-	/*==================================================================*/
-    /*                    VISITOR PATTERN                               */
-    /*==================================================================*/
-	@Override
-    public <R> R accept(TypeVisitor<R> visitor) { return visitor.visit(this); }
+
 }
