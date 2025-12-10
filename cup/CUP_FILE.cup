@@ -116,10 +116,18 @@ non terminal AstTypeNameList paramList;
 /***********************/
 /* OPERATOR PRECEDENCE */
 /***********************/
+/* Precedence from lowest to highest (per Table 1 in spec) */
+/* 1. := assign - handled by grammar structure, not precedence */
+/* 2. = equals */
 precedence left EQ;
+/* 3. <, > comparison */
 precedence left LT, GT;
+/* 4. +, - addition/subtraction */
 precedence left PLUS, MINUS;
+/* 5. *, / multiplication/division */
 precedence left TIMES, DIVIDE;
+/* Unary minus needs higher precedence than binary operators */
+precedence left UMINUS;
 
 /****************/
 /* START SYMBOL */
@@ -270,12 +278,11 @@ exp ::= INT:i                              {: RESULT = new AstExpInt(i); :}
       | exp:e1 LT exp:e2                   {: RESULT = new AstExpBinop(e1, e2, 4); :}
       | exp:e1 GT exp:e2                   {: RESULT = new AstExpBinop(e1, e2, 5); :}
       | exp:e1 EQ exp:e2                   {: RESULT = new AstExpBinop(e1, e2, 6); :}
-      | MINUS exp:e                        {: RESULT = new AstExpUnaryMinus(e); :}
+      | MINUS exp:e                        {: RESULT = new AstExpUnaryMinus(e); :} %prec UMINUS
       | LPAREN exp:e RPAREN                {: RESULT = new AstExpParen(e); :}
       | callExp:c                          {: RESULT = c; :}
-      | NEW ID:className                   {: RESULT = new AstExpNewClass(className); :}
-      | NEW ID:typeName LBRACK exp:size RBRACK  
-                                           {: RESULT = new AstExpNewArray(typeName, size); :}
+      | NEW type:t                         {: RESULT = new AstExpNewClass(t); :}
+      | NEW type:t LBRACK exp:size RBRACK  {: RESULT = new AstExpNewArray(t, size); :}
       ;
 
 /****************/
