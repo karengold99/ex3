@@ -18,11 +18,7 @@ public class TypeClass extends Type
     @Override
     public boolean isClass() { return true; }
 
-    /*==================================================================*/  
-    /*                    VISITOR PATTERN                               */
-    /*==================================================================*/
-    @Override
-    public <R> R accept(TypeVisitor<R> visitor){return visitor.visit(this);}
+
 
     /** Check if this class is ancestor of other */
     public boolean isAncestorOf(TypeClass other)
