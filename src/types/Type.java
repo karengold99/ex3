@@ -24,10 +24,7 @@ public abstract class Type
     public boolean isVoid() { return false; }
     public boolean isNil() { return false; }
 
-	/*==================================================================*/
-    /*                    VISITOR PATTERN                               */
-    /*==================================================================*/
-	public abstract <R> R accept(TypeVisitor<R> visitor);
+
 
     /*  toString */
     @Override
