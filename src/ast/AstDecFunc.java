@@ -2,6 +2,7 @@ package ast;
 
 import types.*;
 import symboltable.*;
+import semantic.SemanticException;
 
 public class AstDecFunc extends AstDec
 {
@@ -13,18 +14,14 @@ public class AstDecFunc extends AstDec
 	public AstTypeNameList params;
 	public AstStmtList body;
 	
-	/******************/
-	/* CONSTRUCTOR(S) */
-	/******************/
 	public AstDecFunc(
+		int lineNumber,
 		String returnTypeName,
 		String name,
 		AstTypeNameList params,
 		AstStmtList body)
 	{
-		/******************************/
-		/* SET A UNIQUE SERIAL NUMBER */
-		/******************************/
+		super(lineNumber);
 		serialNumber = AstNodeSerialNumber.getFresh();
 
 		this.returnTypeName = returnTypeName;
@@ -63,57 +60,68 @@ public class AstDecFunc extends AstDec
 		if (body   != null) AstGraphviz.getInstance().logEdge(serialNumber,body.serialNumber);
 	}
 
-	public Type semantMe()
+	@Override
+	public Type semantMe() throws SemanticException
 	{
 		Type t;
 		Type returnType = null;
 		TypeList type_list = null;
 
-		/*******************/
-		/* [0] return type */
-		/*******************/
+		/************************************/
+		/* [0] Check function name is unique */
+		/************************************/
+		if (SymbolTable.getInstance().findInCurrentScope(name) != null)
+			throw new SemanticException(lineNumber, "function '" + name + "' already declared");
+
+		/************************/
+		/* [1] Check return type */
+		/************************/
 		returnType = SymbolTable.getInstance().find(returnTypeName);
 		if (returnType == null)
-		{
-			System.out.format(">> ERROR [%d:%d] non existing return type %s\n",6,6,returnType);				
-		}
-	
-		/****************************/
-		/* [1] Begin Function Scope */
-		/****************************/
-		SymbolTable.getInstance().beginScope();
+			throw new SemanticException(lineNumber, "return type '" + returnTypeName + "' does not exist");
 
-		/***************************/
-		/* [2] Semant Input Params */
-		/***************************/
-		for (AstTypeNameList it = params; it  != null; it = it.tail)
+		/*************************************************/
+		/* [2] Create function type and enter BEFORE body */
+		/*     (allows recursive calls)                   */
+		/*************************************************/
+		// Build params type list first (iterate to count)
+		for (AstTypeNameList it = params; it != null; it = it.tail)
 		{
 			t = SymbolTable.getInstance().find(it.head.type);
 			if (t == null)
-			{
-				System.out.format(">> ERROR [%d:%d] non existing type %s\n",2,2,it.head.type);				
-			}
-			else
-			{
-				type_list = new TypeList(t,type_list);
-				SymbolTable.getInstance().enter(it.head.name,t);
-			}
+				throw new SemanticException(lineNumber, "parameter type '" + it.head.type + "' does not exist");
+			if (t.isVoid())
+				throw new SemanticException(lineNumber, "parameter cannot have void type");
+			type_list = new TypeList(t, type_list);
+		}
+
+		TypeFunction funcType = new TypeFunction(returnType, name, type_list);
+		SymbolTable.getInstance().enter(name, funcType);
+
+		/*******************************************/
+		/* [3] Begin Function Scope (tracks return) */
+		/*******************************************/
+		SymbolTable.getInstance().beginFuncScope(funcType);
+
+		/*************************************/
+		/* [4] Enter params into function scope */
+		/*************************************/
+		for (AstTypeNameList it = params; it != null; it = it.tail)
+		{
+			t = SymbolTable.getInstance().find(it.head.type);
+			SymbolTable.getInstance().enter(it.head.name, t);
 		}
 
 		/*******************/
-		/* [3] Semant Body */
+		/* [5] Semant Body */
 		/*******************/
-		body.semantMe();
+		if (body != null)
+			body.semantMe();
 
 		/*****************/
-		/* [4] End Scope */
+		/* [6] End Scope */
 		/*****************/
-		SymbolTable.getInstance().endScope();
-
-		/***************************************************/
-		/* [5] Enter the Function Type to the Symbol Table */
-		/***************************************************/
-		SymbolTable.getInstance().enter(name,new TypeFunction(returnType,name,type_list));
+		SymbolTable.getInstance().endFuncScope();
 
 		/************************************************************/
 		/* [6] Return value is irrelevant for function declarations */
