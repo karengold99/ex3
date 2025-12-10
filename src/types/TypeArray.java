@@ -17,9 +17,4 @@ public class TypeArray extends Type
     @Override
     public boolean isArray() { return true; }
 
-    @Override
-    public <R> R accept(TypeVisitor<R> visitor)
-    {
-        return visitor.visit(this);
-    }
 }
