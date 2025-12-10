@@ -42,6 +42,14 @@ public class TypeClass extends Type
         }
         return false;
     }
+    /** Check if this class is subclass of other (or same class) */
+    public boolean isSubclassOf(TypeClass other)
+    {
+        if (other == null) return false;
+        if (this == other) return true;
+        return other.isAncestorOf(this);
+    }
+    
 
     /** Find member in this class only */
     public TypeClassVarDec findMember(String memberName)
