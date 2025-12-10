@@ -10,9 +10,4 @@ public class TypeForScopeBoundaries extends Type
 		super(name);
 	}
 	
-	@Override
-    public <R> R accept(TypeVisitor<R> visitor)
-    {
-        throw new RuntimeException("Cannot visit SCOPE-BOUNDARY type");
-    }
 }
