@@ -2,6 +2,7 @@ package ast;
 
 import types.*;
 import symboltable.*;
+import semantic.SemanticException;
 
 public class AstExpVarSimple extends AstExpVar
 {
@@ -42,8 +43,12 @@ public class AstExpVarSimple extends AstExpVar
 			String.format("SIMPLE\nVAR\n(%s)",name));
 	}
 
-	public Type semantMe()
+	@Override
+	public Type semantMe() throws SemanticException
 	{
-		return SymbolTable.getInstance().find(name);
+		Type t = SymbolTable.getInstance().find(name);
+		if (t == null)
+			throw new SemanticException(lineNumber, "variable '" + name + "' is not declared");
+		return t;
 	}
 }
