@@ -3,13 +3,6 @@
 /*************/
 import java_cup.runtime.*;
 import ast.*;
-import ast.Var.*;
-import ast.Exp.*;
-import ast.Stmt.*;
-import ast.Type.*;
-import ast.Dec.*;
-import ast.ClassField.*;
-import ast.Func.*;
 
 /*************/
 /* PARSER CODE */
@@ -29,7 +22,6 @@ parser code
 
 	public void report_error(String message, Object info)
 	{
-		// Debug output to terminal
 		System.out.print("ERROR >> ");		
 		System.out.print("[");
 		System.out.print(lexer.getLine());
@@ -38,15 +30,12 @@ parser code
 		System.out.print("] ");
 		System.out.println();
 		
-		// Check if lexical error or syntax error
 		if (errorLexer)
 		{
-			// Lexical error - output just "ERROR"
 			fileWriter.print("ERROR");
 		}
 		else
 		{
-			// Syntax error - output "ERROR(line)"
 			fileWriter.print("ERROR(");
 			fileWriter.print(lexer.getLine());
 			fileWriter.print(")");
@@ -98,7 +87,7 @@ terminal String ID;
 /*****************/
 /* NON TERMINALS */
 /*****************/
-non terminal AstProgram      program;
+non terminal AstDecList      program;
 
 non terminal AstDec          dec;
 non terminal AstDecVar       decVar;
@@ -106,30 +95,40 @@ non terminal AstDecFunc      decFunc;
 non terminal AstDecClass     decClass;
 non terminal AstDecArrayTypedef arrayTypedef;
 
-non terminal AstClassField   cField;
-non terminal AstClassField   cFieldList;
+non terminal AstCFieldList   cFieldList;
+non terminal AstCField       cField;
 
-non terminal AstType         type;
+non terminal String          type;
 
-non terminal AstVar          var;
+non terminal AstExpVar       var;
 
 non terminal AstExp          exp;
-non terminal AstExp          callExp;
+non terminal AstExp          newExp;
+non terminal AstExpCall      callExp;
 
 non terminal AstExpList      expList;
 
 non terminal AstStmt         stmt;
 non terminal AstStmtList     stmtList;
 
-non terminal AstFuncParam param;
-non terminal AstFuncParamList paramList;
+non terminal AstTypeName     param;
+non terminal AstTypeNameList paramList;
 
 /***********************/
 /* OPERATOR PRECEDENCE */
 /***********************/
-precedence left EQ, LT, GT;
-precedence left PLUS, MINUS;
-precedence left TIMES, DIVIDE;
+/* Precedence from lowest to highest (per Table 1 in spec) */
+precedence nonassoc ASSIGN;
+precedence left EQ;
+precedence left LT;
+precedence left GT;
+precedence left PLUS;
+precedence left MINUS;
+precedence left TIMES;
+precedence left DIVIDE;
+precedence nonassoc LBRACK;
+precedence nonassoc LPAREN;
+precedence left DOT;
 
 /****************/
 /* START SYMBOL */
@@ -143,162 +142,173 @@ start with program;
 /************/
 /* PROGRAM  */
 /************/
-program ::= dec:d program:p   {: RESULT = new AstProgram(d,p); :}
-          | dec:d             {: RESULT = new AstProgram(d,null); :}
+program ::= dec:d program:p   {: RESULT = new AstDecList(d, p); :}
+          | dec:d             {: RESULT = new AstDecList(d, null); :}
           ;
 
 /*********/
 /* DEC   */
 /*********/
-dec ::= decVar:v               {: RESULT = v; :}
-     | decFunc:f               {: RESULT = f; :}
-     | decClass:c              {: RESULT = c; :}
-     | arrayTypedef:a          {: RESULT = a; :}
+dec ::= decVar:v              {: RESULT = v; :}
+     | decFunc:f              {: RESULT = f; :}
+     | decClass:c             {: RESULT = c; :}
+     | arrayTypedef:a         {: RESULT = a; :}
      ;
 
 /****************/
 /* VAR DEC      */
 /****************/
-decVar ::= type:t ID:id SEMICOLON               
-            {: RESULT = new AstDecVar(t,id,null); :}
-         | type:t ID:id ASSIGN exp:e SEMICOLON  
-            {: RESULT = new AstDecVar(t,id,e);    :}
+decVar ::= type:t ID:name SEMICOLON               
+            {: RESULT = new AstDecVar(lexer.getLine(), t, name, null); :}
+         | type:t ID:name ASSIGN exp:e SEMICOLON  
+            {: RESULT = new AstDecVar(lexer.getLine(), t, name, e); :}
+         | type:t ID:name ASSIGN newExp:e SEMICOLON  
+            {: RESULT = new AstDecVar(lexer.getLine(), t, name, e); :}
          ;
 
 /****************/
 /* FUNC PARAMS  */
 /****************/
-param ::= type:t ID:id
-          {: RESULT = new AstFuncParam(t,id); :}
+param ::= type:t ID:name
+          {: RESULT = new AstTypeName(t, name); :}
           ;
 
 paramList ::= param:p
-              {: RESULT = new AstFuncParamList(p,null); :}
+              {: RESULT = new AstTypeNameList(p, null); :}
             | param:p COMMA paramList:rest
-              {: RESULT = new AstFuncParamList(p,rest); :}
+              {: RESULT = new AstTypeNameList(p, rest); :}
             ;
 
 /****************/
 /* FUNC DEC     */
 /****************/
 decFunc ::=
-      type:t ID:id LPAREN RPAREN
+      type:t ID:name LPAREN RPAREN
       LBRACE stmtList:body RBRACE
-      {: RESULT = new AstDecFunc(t,id,null,body); :}
+      {: RESULT = new AstDecFunc(lexer.getLine(), t, name, null, body); :}
 
-    | type:t ID:id LPAREN paramList:params RPAREN
+    | type:t ID:name LPAREN paramList:params RPAREN
       LBRACE stmtList:body RBRACE
-      {: RESULT = new AstDecFunc(t,id,params,body); :}
+      {: RESULT = new AstDecFunc(lexer.getLine(), t, name, params, body); :}
     ;
 
 /*****************/
 /* CLASS DEC     */
 /*****************/
-decClass ::= CLASS ID:id LBRACE cFieldList:f RBRACE
-             {: RESULT = new AstDecClass(id,null,f); :}
-           | CLASS ID:id EXTENDS ID:parent 
+decClass ::= CLASS ID:name LBRACE cFieldList:f RBRACE
+             {: RESULT = new AstDecClass(lexer.getLine(), name, null, f); :}
+           | CLASS ID:name EXTENDS ID:parent 
              LBRACE cFieldList:f RBRACE
-             {: RESULT = new AstDecClass(id,parent,f); :}
+             {: RESULT = new AstDecClass(lexer.getLine(), name, parent, f); :}
            ;
 
 /*************************/
 /* ARRAY TYPEDEF DEC     */
 /*************************/
-arrayTypedef ::= ARRAY ID:id EQ type:t LBRACK RBRACK SEMICOLON
-                 {: RESULT = new AstDecArrayTypedef(id,t); :}
+arrayTypedef ::= ARRAY ID:name EQ type:t LBRACK RBRACK SEMICOLON
+                 {: RESULT = new AstDecArrayTypedef(lexer.getLine(), name, t); :}
                ;
 
 /***********************/
 /* CLASS FIELD LIST    */
 /***********************/
 cFieldList ::= cField:f cFieldList:rest
-               {: f.next = rest; RESULT = f; :}
+               {: RESULT = new AstCFieldList(f, rest); :}
              | cField:f
-               {: RESULT = f; :}
+               {: RESULT = new AstCFieldList(f, null); :}
              ;
 
-cField ::= decVar:v     {: RESULT = new AstClassField(v,null); :}
-         | decFunc:f    {: RESULT = new AstClassField(f,null); :}
+cField ::= decVar:v
+           {: RESULT = new AstCFieldVar(v); :}
+         | decFunc:f
+           {: RESULT = new AstCFieldFunc(f); :}
          ;
 
 /************/
 /* TYPE     */
 /************/
-type ::= TYPE_INT        {: RESULT = new AstTypePrimitive("int"); :}
-       | TYPE_STRING     {: RESULT = new AstTypePrimitive("string"); :}
-       | TYPE_VOID       {: RESULT = new AstTypePrimitive("void"); :}
-       | ID:name         {: RESULT = new AstTypeId(name); :}
+type ::= TYPE_INT        {: RESULT = "int"; :}
+       | TYPE_STRING     {: RESULT = "string"; :}
+       | TYPE_VOID       {: RESULT = "void"; :}
+       | ID:name         {: RESULT = name; :}
        ;
 
 /************/
 /* VAR      */
 /************/
-var ::= ID:name                          {: RESULT = new AstVarSimple(name); :}
-      | var:v DOT ID:fieldName           {: RESULT = new AstVarField(v,fieldName); :}
-      | var:v LBRACK exp:e RBRACK        {: RESULT = new AstVarSubscript(v,e); :}
+var ::= ID:name                          {: RESULT = new AstExpVarSimple(name); :}
+      | var:v DOT ID:fieldName           {: RESULT = new AstExpVarField(v, fieldName); :}
+      | var:v LBRACK exp:e RBRACK        {: RESULT = new AstExpVarSubscript(v, e); :}
       ;
 
 /************/
 /* CALL EXPR*/
 /************/
 callExp ::= 
-          /* Standalone function call - no object prefix */
           ID:name LPAREN RPAREN
-            {: RESULT = new AstExpCall(null,name,null); :}
+            {: RESULT = new AstExpCall(null, name, null); :}
           
-        | ID:name LPAREN expList:l RPAREN
-            {: RESULT = new AstExpCall(null,name,l); :}
+        | ID:name LPAREN expList:args RPAREN
+            {: RESULT = new AstExpCall(null, name, args); :}
           
-          /* Method call on object */
         | var:v DOT ID:name LPAREN RPAREN
-            {: RESULT = new AstExpCall(v,name,null); :}
+            {: RESULT = new AstExpCall(v, name, null); :}
           
-        | var:v DOT ID:name LPAREN expList:l RPAREN
-            {: RESULT = new AstExpCall(v,name,l); :}
+        | var:v DOT ID:name LPAREN expList:args RPAREN
+            {: RESULT = new AstExpCall(v, name, args); :}
           ;
 
 /************/
 /* EXP LIST */
 /************/
-expList ::= exp:e                        {: RESULT = new AstExpList(e,null); :}
-          | exp:e COMMA expList:l        {: RESULT = new AstExpList(e,l); :}
+expList ::= exp:e                        {: RESULT = new AstExpList(e, null); :}
+          | exp:e COMMA expList:rest     {: RESULT = new AstExpList(e, rest); :}
           ;
 
 /************/
 /* EXP      */
 /************/
-exp ::= INT:i                              {: RESULT = new AstExpInt(i); :}
-      | STRING:s                           {: RESULT = new AstExpString(s); :}
-      | NIL                                {: RESULT = new AstExpNil(); :}
-      | var:v                              {: RESULT = new AstExpVar(v); :}
-      | exp:e1 PLUS exp:e2                 {: RESULT = new AstExpBinop(e1,e2,0); :}
-      | exp:e1 MINUS exp:e2                {: RESULT = new AstExpBinop(e1,e2,1); :}
-      | exp:e1 TIMES exp:e2                {: RESULT = new AstExpBinop(e1,e2,2); :}
-      | exp:e1 DIVIDE exp:e2               {: RESULT = new AstExpBinop(e1,e2,3); :}
-      | exp:e1 LT exp:e2                   {: RESULT = new AstExpBinop(e1,e2,4); :}
-      | exp:e1 GT exp:e2                   {: RESULT = new AstExpBinop(e1,e2,5); :}
-      | exp:e1 EQ exp:e2                   {: RESULT = new AstExpBinop(e1,e2,6); :}
-      | MINUS exp:e                        {: RESULT = new AstExpUnaryMinus(e); :}
+exp ::= var:v                              {: RESULT = v; :}
       | LPAREN exp:e RPAREN                {: RESULT = new AstExpParen(e); :}
+      | exp:e1 PLUS exp:e2                 {: RESULT = new AstExpBinop(e1, e2, 0); :}
+      | exp:e1 MINUS exp:e2                {: RESULT = new AstExpBinop(e1, e2, 1); :}
+      | exp:e1 TIMES exp:e2                {: RESULT = new AstExpBinop(e1, e2, 2); :}
+      | exp:e1 DIVIDE exp:e2               {: RESULT = new AstExpBinop(e1, e2, 3); :}
+      | exp:e1 LT exp:e2                   {: RESULT = new AstExpBinop(e1, e2, 4); :}
+      | exp:e1 GT exp:e2                   {: RESULT = new AstExpBinop(e1, e2, 5); :}
+      | exp:e1 EQ exp:e2                   {: RESULT = new AstExpBinop(e1, e2, 6); :}
       | callExp:c                          {: RESULT = c; :}
-      | NEW type:t                         {: RESULT = new AstExpNewType(t); :}
-      | NEW type:t LBRACK exp:e RBRACK     {: RESULT = new AstExpNewArray(t,e); :}
+      | MINUS INT:i                        {: RESULT = new AstExpInt(-i); :}
+      | INT:i                              {: RESULT = new AstExpInt(i); :}
+      | NIL                                {: RESULT = new AstExpNil(); :}
+      | STRING:s                           {: RESULT = new AstExpString(s); :}
       ;
+
+/************/
+/* NEW EXP  */
+/************/
+newExp ::= NEW type:t                         {: RESULT = new AstExpNewClass(t); :}
+         | NEW type:t LBRACK exp:size RBRACK  {: RESULT = new AstExpNewArray(t, size); :}
+         ;
 
 /****************/
 /* STATEMENT    */
 /****************/
 stmt ::=
-         /* VARIABLE DECLARATION FIRST! */
-         type:t ID:id SEMICOLON
-            {: RESULT = new AstStmtVarDec(new AstDecVar(t,id,null)); :}
+         type:t ID:name SEMICOLON
+            {: RESULT = new AstStmtDecVar(new AstDecVar(lexer.getLine(), t, name, null)); :}
 
-       | type:t ID:id ASSIGN exp:e SEMICOLON
-            {: RESULT = new AstStmtVarDec(new AstDecVar(t,id,e)); :}
+       | type:t ID:name ASSIGN exp:e SEMICOLON
+            {: RESULT = new AstStmtDecVar(new AstDecVar(lexer.getLine(), t, name, e)); :}
 
-       /* THEN THE REST OF THE RULES */
+       | type:t ID:name ASSIGN newExp:e SEMICOLON
+            {: RESULT = new AstStmtDecVar(new AstDecVar(lexer.getLine(), t, name, e)); :}
+
        | var:v ASSIGN exp:e SEMICOLON
-         {: RESULT = new AstStmtAssign(v,e); :}
+         {: RESULT = new AstStmtAssign(v, e); :}
+
+       | var:v ASSIGN newExp:e SEMICOLON
+         {: RESULT = new AstStmtAssign(v, e); :}
 
        | RETURN exp:e SEMICOLON
          {: RESULT = new AstStmtReturn(e); :}
@@ -307,25 +317,25 @@ stmt ::=
          {: RESULT = new AstStmtReturn(null); :}
 
        | IF LPAREN exp:c RPAREN 
-         LBRACE stmtList:t RBRACE
-         {: RESULT = new AstStmtIf(c,t,null); :}
+         LBRACE stmtList:body RBRACE
+         {: RESULT = new AstStmtIf(c, body, null); :}
 
        | IF LPAREN exp:c RPAREN 
-         LBRACE stmtList:t RBRACE 
-         ELSE LBRACE stmtList:eBody RBRACE
-         {: RESULT = new AstStmtIf(c,t,eBody); :}
+         LBRACE stmtList:thenBody RBRACE 
+         ELSE LBRACE stmtList:elseBody RBRACE
+         {: RESULT = new AstStmtIf(c, thenBody, elseBody); :}
 
        | WHILE LPAREN exp:c RPAREN 
-         LBRACE stmtList:b RBRACE
-         {: RESULT = new AstStmtWhile(c,b); :}
+         LBRACE stmtList:body RBRACE
+         {: RESULT = new AstStmtWhile(c, body); :}
 
        | callExp:c SEMICOLON
-         {: RESULT = new AstStmtCall((AstExpCall)c); :}
+         {: RESULT = new AstStmtCall(c); :}
        ;
 
 /*****************/
 /* STMT LIST     */
 /*****************/
-stmtList ::= stmt:s stmtList:l    {: RESULT = new AstStmtList(s,l); :}
-           | stmt:s               {: RESULT = new AstStmtList(s,null); :}
+stmtList ::= stmt:s stmtList:rest    {: RESULT = new AstStmtList(s, rest); :}
+           | stmt:s                  {: RESULT = new AstStmtList(s, null); :}
            ;

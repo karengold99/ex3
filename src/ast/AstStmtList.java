@@ -1,6 +1,7 @@
 package ast;
 
 import types.*;
+import semantic.SemanticException;
 
 public class AstStmtList extends AstNode
 {
@@ -63,7 +64,8 @@ public class AstStmtList extends AstNode
 		if (tail != null) AstGraphviz.getInstance().logEdge(serialNumber,tail.serialNumber);
 	}
 	
-	public Type semantMe()
+	@Override
+	public Type semantMe() throws SemanticException
 	{
 		if (head != null) head.semantMe();
 		if (tail != null) tail.semantMe();

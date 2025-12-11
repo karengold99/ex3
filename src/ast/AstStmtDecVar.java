@@ -1,6 +1,7 @@
 package ast;
 
 import types.*;
+import semantic.SemanticException;
 
 public class AstStmtDecVar extends AstStmt
 {
@@ -39,7 +40,8 @@ public class AstStmtDecVar extends AstStmt
 		AstGraphviz.getInstance().logEdge(serialNumber,var.serialNumber);
 	}
 
-	public Type semantMe()
+	@Override
+	public Type semantMe() throws SemanticException
 	{
 		return var.semantMe();
 	}

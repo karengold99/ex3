@@ -4,13 +4,12 @@ import types.Type;
 import semantic.SemanticException;
 
 public abstract class AstNode {
-	/*******************************************/
-	/* The serial number is for debug purposes */
-	/* In particular, it can help in creating */
-	/* a graphviz dot format of the AST ... */
-	/*******************************************/
 	public int serialNumber;
 	public int lineNumber;
+
+	public AstNode() {
+		this.lineNumber = 0;
+	}
 
 	public AstNode(int lineNumber) {
 		this.lineNumber = lineNumber;

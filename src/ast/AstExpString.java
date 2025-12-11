@@ -1,6 +1,7 @@
 package ast;
 
 import types.*;
+import semantic.SemanticException;
 
 public class AstExpString extends AstExp
 {
@@ -38,7 +39,8 @@ public class AstExpString extends AstExp
 			String.format("STRING\n%s",value.replace('"','\'')));
 	}
 
-	public Type semantMe()
+	@Override
+	public Type semantMe() throws SemanticException
 	{
 		return TypeString.getInstance();
 	}

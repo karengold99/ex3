@@ -67,7 +67,8 @@ public class AstDecVar extends AstDec {
 		if (t == null)
 			throw new SemanticException(lineNumber, "type '" + type + "' does not exist");
 
-		if (t == TypeVoid.getInstance())
+		// 2. Variables cannot be void (PDF 2.1)
+		if (t.isVoid())
 			throw new SemanticException(lineNumber, "variable cannot be declared with type void");
 
 		// 2. Check name does not already exist in the current scope
@@ -77,43 +78,12 @@ public class AstDecVar extends AstDec {
 		// 3. Check initial value (if exists)
 		if (initialValue != null) {
 			Type initType = initialValue.semantMe();
-
-			// Nil assignment rules (arrays/classes only)
-			if (initType == TypeNil.getInstance()) {
-				if (!(t instanceof TypeClass) && !(t instanceof TypeArray))
-					throw new SemanticException(lineNumber, "cannot assign nil to type '" + type + "'");
-			} else {
-				// primitive types: exact match
-				if (t instanceof TypeInt) {
-					if (!(initType instanceof TypeInt))
-						throw new SemanticException(lineNumber, "type mismatch: expected int, got " + initType);
-				} else if (t instanceof TypeString) {
-					if (!(initType instanceof TypeString))
-						throw new SemanticException(lineNumber, "type mismatch: expected string, got " + initType);
-				}
-				// class assignment: subtype allowed
-				else if (t instanceof TypeClass) {
-					if (!(initType instanceof TypeClass) &&
-							!(initType == TypeNil.getInstance()))
-						throw new SemanticException(lineNumber, "illegal assignment to class type");
-
-					if (initType instanceof TypeClass) {
-						TypeClass dst = (TypeClass) t;
-						TypeClass src = (TypeClass) initType;
-
-						if (!src.isSubclassOf(dst))
-							throw new SemanticException(lineNumber, "class type mismatch");
-					}
-				}
-				// array assignment: exact type only (no subtyping)
-				else if (t instanceof TypeArray) {
-					if (!t.equals(initType))
-						throw new SemanticException(lineNumber, "array types are not interchangeable");
-				}
-			}
+			
+			if (!TypeUtils.canAssignTo(initType, t))
+				throw new SemanticException(lineNumber, "type mismatch in variable initialization");
 		}
 
-		// 4. Enter variable into symbol table
+		// 5. Enter variable into symbol table
 		SymbolTable.getInstance().enter(name, t);
 
 		return null;
