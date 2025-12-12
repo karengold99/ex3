@@ -18,8 +18,6 @@ public class TypeFunction extends Type
     @Override
     public boolean isFunction() { return true; }
 
-    @Override
-    public <R> R accept(TypeVisitor<R> visitor){return visitor.visit(this);}
 
     /** Check if signatures match (for method override) */
     public boolean signatureMatches(TypeFunction other)
