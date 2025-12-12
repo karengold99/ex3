@@ -5,79 +5,118 @@ import semantic.SemanticException;
 import symboltable.*;
 
 public class AstDecClass extends AstDec {
-	/********/
-	/* NAME */
-	/********/
 	public String name;
+	public String parentName;  // null if no extends
+	public AstCFieldList dataMembers;
 
-	/****************/
-	/* DATA MEMBERS */
-	/****************/
-	public AstTypeNameList dataMembers;
-
-	/******************/
-	/* CONSTRUCTOR(S) */
-	/******************/
-	public AstDecClass(int lineNumber, String name, AstTypeNameList dataMembers) {
-		super(lineNumber);
-		/******************************/
-		/* SET A UNIQUE SERIAL NUMBER */
-		/******************************/
+	public AstDecClass(String name, String parentName, AstCFieldList dataMembers, int line) {
 		serialNumber = AstNodeSerialNumber.getFresh();
-
+		this.lineNumber = line;  // Override the default staticLine
+		// System.out.format("====================== classDec -> class %s extends %s { ... }\n", name, parentName); // Debug disabled
 		this.name = name;
+		this.parentName = parentName;
 		this.dataMembers = dataMembers;
 	}
 
-	/*********************************************************/
-	/* The printing message for a class declaration AST node */
-	/*********************************************************/
 	@Override
 	public void printMe() {
-		/*************************************/
-		/* RECURSIVELY PRINT HEAD + TAIL ... */
-		/*************************************/
-		System.out.format("CLASS DEC = %s\n", name);
+		System.out.format("CLASS DEC = %s", name);
+		if (parentName != null)
+			System.out.format(" extends %s", parentName);
+		System.out.println();
+		
 		if (dataMembers != null)
 			dataMembers.printMe();
 
-		/***************************************/
-		/* PRINT Node to AST GRAPHVIZ DOT file */
-		/***************************************/
-		AstGraphviz.getInstance().logNode(
-				serialNumber,
-				String.format("CLASS\n%s", name));
-
-		/****************************************/
-		/* PRINT Edges to AST GRAPHVIZ DOT file */
-		/****************************************/
-		AstGraphviz.getInstance().logEdge(serialNumber, dataMembers.serialNumber);
+		AstGraphviz.getInstance().logNode(serialNumber,
+			String.format("CLASS\n%s", name));
+		if (dataMembers != null)
+			AstGraphviz.getInstance().logEdge(serialNumber, dataMembers.serialNumber);
 	}
 
 	@Override
 	public Type semantMe() throws SemanticException {
-		// Check class is not already declared in global scope
-		if (SymbolTable.getInstance().find(name) != null)
+		// PDF 2.1: Class definitions may appear only in global scope
+		if (!SymbolTable.getInstance().isGlobalScope())
+			throw new SemanticException(lineNumber, "class can only be defined at global scope");
+
+		// Check class is not already declared in current scope (PDF 2.7)
+		if (SymbolTable.getInstance().findInCurrentScope(name) != null)
 			throw new SemanticException(lineNumber, "class '" + name + "' already defined");
 
-		// Insert empty class type BEFORE processing members
-		TypeClass emptyClass = new TypeClass(null, name, null);
-		SymbolTable.getInstance().enter(name, emptyClass);
+		// PDF 2.2: A class can extend only previously defined classes
+		TypeClass parentType = null;
+		TypeClassVarDecList membersList = new TypeClassVarDecList(null, null);
+		
+		if (parentName != null) {
+			Type t = SymbolTable.getInstance().find(parentName);
+			if (t == null || !t.isClass())
+				throw new SemanticException(lineNumber, "parent class '" + parentName + "' not found");
+			parentType = (TypeClass) t;
+			// Inherit parent's members
+			if (parentType.dataMembers != null)
+				membersList = parentType.dataMembers.inherit();
+		}
+
+		// Create class type and enter BEFORE processing members (for self-reference)
+		TypeClass classType = new TypeClass(parentType, name, membersList);
+		SymbolTable.getInstance().enter(name, classType);
 
 		// Begin class scope
-		SymbolTable.getInstance().beginScope();
+		SymbolTable.getInstance().beginClassScope(classType);
 
-		// Semant data members
-		TypeList memberTypes = null;
-		if (dataMembers != null)
-			memberTypes = dataMembers.semantMe();
+		// Process each data member
+		for (AstCFieldList cl = dataMembers; cl != null; cl = cl.tail) {
+			if (cl.head == null) continue;
+			
+			Type memberType = cl.head.semantMe();
+			if (memberType == null)
+				throw new SemanticException(cl.head.lineNumber, "invalid class member");
+
+			// Get member name
+			String memberName;
+			if (cl.head instanceof AstCFieldFunc)
+				memberName = ((AstCFieldFunc) cl.head).funcDec.name;
+			else if (cl.head instanceof AstCFieldVar)
+				memberName = ((AstCFieldVar) cl.head).varDec.name;
+			else
+				throw new SemanticException(cl.head.lineNumber, "unknown class member type");
+
+			// PDF 2.2: Check for redeclaration within same class (not inherited)
+			TypeClassVarDec existing = membersList.find(memberName);
+			if (existing != null && !existing.inherited)
+				throw new SemanticException(cl.head.lineNumber, "'" + memberName + "' already declared in class");
+
+			// PDF 2.2: Method overriding rules
+			if (existing != null && existing.inherited) {
+				boolean existingIsMethod = (existing.t instanceof TypeFunction);
+				boolean newIsMethod = (memberType instanceof TypeFunction);
+				
+				// Field cannot shadow anything
+				if (!newIsMethod)
+					throw new SemanticException(cl.head.lineNumber, "field '" + memberName + "' cannot shadow inherited member");
+				
+				// Method can only override method with same signature
+				if (newIsMethod && !existingIsMethod)
+					throw new SemanticException(cl.head.lineNumber, "method '" + memberName + "' cannot shadow inherited field");
+				
+				if (newIsMethod && existingIsMethod) {
+					// Check signature match for method override
+					TypeFunction newFunc = (TypeFunction) memberType;
+					TypeFunction oldFunc = (TypeFunction) existing.t;
+					if (!newFunc.signatureMatches(oldFunc))
+						throw new SemanticException(cl.head.lineNumber, "method '" + memberName + "' override signature mismatch");
+				}
+			}
+
+			// Add new member
+			TypeClassVarDec newMember = new TypeClassVarDec(memberType, memberName);
+			membersList.insert(newMember);
+		}
 
 		// End class scope
-		SymbolTable.getInstance().endScope();
+		SymbolTable.getInstance().endClassScope();
 
-		// Update existing class entry
-		emptyClass.dataMembers = memberTypes; 
-
-		return null; // class declarations return null
+		return null;
 	}
 }

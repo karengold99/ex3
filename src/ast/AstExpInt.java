@@ -17,7 +17,7 @@ public class AstExpInt extends AstExp
 		/******************************/
 		serialNumber = AstNodeSerialNumber.getFresh();
 
-		System.out.format("====================== exp -> INT( %d )\n", value);
+		// System.out.format("====================== exp -> INT( %d )\n", value);
 		this.value = value;
 	}
 
@@ -43,5 +43,10 @@ public class AstExpInt extends AstExp
 	public Type semantMe() throws SemanticException
 	{
 		return TypeInt.getInstance();
+	}
+
+	@Override
+	public Integer getConstantValue() {
+		return value;
 	}
 }

@@ -15,15 +15,14 @@ public class AstDecFunc extends AstDec
 	public AstStmtList body;
 	
 	public AstDecFunc(
-		int lineNumber,
 		String returnTypeName,
 		String name,
 		AstTypeNameList params,
-		AstStmtList body)
+		AstStmtList body,
+		int line)
 	{
-		super(lineNumber);
 		serialNumber = AstNodeSerialNumber.getFresh();
-
+		this.lineNumber = line;  // Override default line number
 		this.returnTypeName = returnTypeName;
 		this.name = name;
 		this.params = params;
@@ -81,30 +80,43 @@ public class AstDecFunc extends AstDec
 			throw new SemanticException(lineNumber, "return type '" + returnTypeName + "' does not exist");
 
 		/*************************************************/
-		/* [2] Create function type and enter BEFORE body */
-		/*     (allows recursive calls)                   */
+		/* [2] Check for duplicate parameters and void types */
 		/*************************************************/
-		// Build params type list first (iterate to count)
+		java.util.HashSet<String> paramNames = new java.util.HashSet<>();
 		for (AstTypeNameList it = params; it != null; it = it.tail)
 		{
-			t = SymbolTable.getInstance().find(it.head.type);
-			if (t == null)
-				throw new SemanticException(lineNumber, "parameter type '" + it.head.type + "' does not exist");
-			if (t.isVoid())
-				throw new SemanticException(lineNumber, "parameter cannot have void type");
-			type_list = new TypeList(t, type_list);
+			// Check for duplicate parameter names
+			if (paramNames.contains(it.head.name))
+				throw new SemanticException(it.head.lineNumber, "duplicate parameter name '" + it.head.name + "'");
+			paramNames.add(it.head.name);
+			
+			// Check parameter type exists and is not void
+			Type paramType = SymbolTable.getInstance().find(it.head.type);
+			if (paramType == null)
+				throw new SemanticException(it.head.lineNumber, "parameter type '" + it.head.type + "' does not exist");
+			if (paramType.isVoid())
+				throw new SemanticException(it.head.lineNumber, "parameter cannot have void type");
+		}
+
+		/*************************************************/
+		/* [3] Build params type list                    */
+		/*************************************************/
+		if (params != null) {
+			type_list = params.toTypeList();
+		} else {
+			type_list = null;
 		}
 
 		TypeFunction funcType = new TypeFunction(returnType, name, type_list);
 		SymbolTable.getInstance().enter(name, funcType);
 
 		/*******************************************/
-		/* [3] Begin Function Scope (tracks return) */
+		/* [4] Begin Function Scope (tracks return) */
 		/*******************************************/
 		SymbolTable.getInstance().beginFuncScope(funcType);
 
 		/*************************************/
-		/* [4] Enter params into function scope */
+		/* [5] Enter params into function scope */
 		/*************************************/
 		for (AstTypeNameList it = params; it != null; it = it.tail)
 		{
@@ -113,20 +125,16 @@ public class AstDecFunc extends AstDec
 		}
 
 		/*******************/
-		/* [5] Semant Body */
+		/* [6] Semant Body */
 		/*******************/
 		if (body != null)
 			body.semantMe();
 
 		/*****************/
-		/* [6] End Scope */
+		/* [7] End Scope */
 		/*****************/
 		SymbolTable.getInstance().endFuncScope();
 
-		/************************************************************/
-		/* [6] Return value is irrelevant for function declarations */
-		/************************************************************/
-		return null;		
+		return funcType;		
 	}
-	
 }
