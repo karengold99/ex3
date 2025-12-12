@@ -1,8 +1,7 @@
-   
 import java.io.*;
-import java.io.PrintWriter;
 import java_cup.runtime.Symbol;
 import ast.*;
+import semantic.SemanticException;
 
 public class Main
 {
@@ -19,57 +18,26 @@ public class Main
 		
 		try
 		{
-			/********************************/
-			/* [1] Initialize a file reader */
-			/********************************/
 			fileReader = new FileReader(inputFileName);
-
-			/********************************/
-			/* [2] Initialize a file writer */
-			/********************************/
 			fileWriter = new PrintWriter(outputFileName);
-			
-			/******************************/
-			/* [3] Initialize a new lexer */
-			/******************************/
 			l = new Lexer(fileReader);
-			
-			/*******************************/
-			/* [4] Initialize a new parser */
-			/*******************************/
-			p = new Parser(l);
-
-			/***********************************/
-			/* [5] 3 ... 2 ... 1 ... Parse !!! */
-			/***********************************/
+			p = new Parser(l, fileWriter);
 			ast = (AstDecList) p.parse().value;
+			// ast.printMe(); // Disabled debug output
 			
-			/*************************/
-			/* [6] Print the AST ... */
-			/*************************/
-			ast.printMe();
-
-			/**************************/
-			/* [7] Semant the AST ... */
-			/**************************/
-			ast.semantMe();
+			try {
+				ast.semantMe();
+				fileWriter.print("OK");
+			} catch (SemanticException e) {
+				fileWriter.print("ERROR(" + e.line + ")");
+			}
 			
-			/*************************/
-			/* [8] Close output file */
-			/*************************/
 			fileWriter.close();
-
-			/*************************************/
-			/* [9] Finalize AST GRAPHIZ DOT file */
-			/*************************************/
 			AstGraphviz.getInstance().finalizeFile();
-    	}
-			     
+		}
 		catch (Exception e)
 		{
 			e.printStackTrace();
 		}
 	}
 }
-
-
