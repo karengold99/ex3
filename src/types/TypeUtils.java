@@ -32,16 +32,4 @@ public class TypeUtils
         return false;
     }
 
-    /** Check if two function signatures match (for method override) */
-    public static boolean signaturesMatch(TypeFunction f1, TypeFunction f2)
-    {
-        if (f1.returnType != f2.returnType) return false;
-        TypeList p1 = f1.params, p2 = f2.params;
-        while (p1 != null && p2 != null) {
-            if (p1.head != p2.head) return false;
-            p1 = p1.tail;
-            p2 = p2.tail;
-        }
-        return p1 == null && p2 == null;
-    }
 }
