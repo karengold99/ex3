@@ -104,7 +104,7 @@ public class AstDecClass extends AstDec {
 					// Check signature match for method override
 					TypeFunction newFunc = (TypeFunction) memberType;
 					TypeFunction oldFunc = (TypeFunction) existing.t;
-					if (!TypeUtils.signaturesMatch(newFunc, oldFunc))
+					if (!newFunc.signatureMatches(oldFunc))
 						throw new SemanticException(cl.head.lineNumber, "method '" + memberName + "' override signature mismatch");
 				}
 			}
