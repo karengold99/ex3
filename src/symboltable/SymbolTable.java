@@ -16,15 +16,7 @@ public class SymbolTable
 	
 	private int hash(String s)
 	{
-		if (s.charAt(0) == 'l') return 1;
-		if (s.charAt(0) == 'm') return 1;
-		if (s.charAt(0) == 'r') return 3;
-		if (s.charAt(0) == 'i') return 6;
-		if (s.charAt(0) == 'd') return 6;
-		if (s.charAt(0) == 'k') return 6;
-		if (s.charAt(0) == 'f') return 6;
-		if (s.charAt(0) == 'S') return 6;
-		return 12;
+		return Math.abs(s.hashCode()) % hashArraySize;
 	}
 
 	public void enter(String name, Type t)
@@ -61,14 +53,14 @@ public class SymbolTable
 
 	public void beginScope()
 	{
-		enter("SCOPE-BOUNDARY", new TypeForScopeBoundaries("NONE"));
+		enter("SCOPE-BOUNDARY", TypeForScopeBoundaries.getInstance());
 		curScopeDepth++;
 		printMe();
 	}
 
 	public void endScope()
 	{
-		while (top.name != "SCOPE-BOUNDARY") {
+		while (!top.name.equals("SCOPE-BOUNDARY")) {
 			table[top.index] = top.next;
 			topIndex--;
 			top = top.prevtop;
