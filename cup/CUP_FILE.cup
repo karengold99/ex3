@@ -22,13 +22,14 @@ parser code
 
 	public void report_error(String message, Object info)
 	{
-		System.out.print("ERROR >> ");		
-		System.out.print("[");
-		System.out.print(lexer.getLine());
-		System.out.print(":");
-		System.out.print(lexer.getTokenStartPosition());
-		System.out.print("] ");
-		System.out.println();
+		// Debug output disabled for tests
+		// System.out.print("ERROR >> ");		
+		// System.out.print("[");
+		// System.out.print(lexer.getLine());
+		// System.out.print(":");
+		// System.out.print(lexer.getTokenStartPosition());
+		// System.out.print("] ");
+		// System.out.println();
 		
 		if (errorLexer)
 		{
@@ -50,22 +51,24 @@ parser code
 /************************/
 scan with
 {:
+	AstNode.staticLine = lexer.getLine();
 	Symbol s = lexer.next_token();
 	errorLexer = (s.sym == TokenNames.ERROR);
-	System.out.print(s.sym);
-	System.out.print("[");
-	System.out.print(lexer.getLine());
-	System.out.print(":");
-	System.out.print(lexer.getTokenStartPosition());
-	System.out.print("] ");
-	System.out.print(TokenNames.terminalNames[s.sym]);
-	if (s.value != null)
-	{
-		System.out.print("( ");
-		System.out.print(s.value);
-		System.out.print(" )");
-	}
-	System.out.print("\n");
+	// Debug output disabled for tests
+	// System.out.print(s.sym);
+	// System.out.print("[");
+	// System.out.print(lexer.getLine());
+	// System.out.print(":");
+	// System.out.print(lexer.getTokenStartPosition());
+	// System.out.print("] ");
+	// System.out.print(TokenNames.terminalNames[s.sym]);
+	// if (s.value != null)
+	// {
+	// 	System.out.print("( ");
+	// 	System.out.print(s.value);
+	// 	System.out.print(" )");
+	// }
+	// System.out.print("\n");
 	return s; 
 :};
 
@@ -159,11 +162,11 @@ dec ::= decVar:v              {: RESULT = v; :}
 /* VAR DEC      */
 /****************/
 decVar ::= type:t ID:name SEMICOLON               
-            {: RESULT = new AstDecVar(lexer.getLine(), t, name, null); :}
+            {: RESULT = new AstDecVar(t, name, null, tleft + 1); :}
          | type:t ID:name ASSIGN exp:e SEMICOLON  
-            {: RESULT = new AstDecVar(lexer.getLine(), t, name, e); :}
+            {: RESULT = new AstDecVar(t, name, e, tleft + 1); :}
          | type:t ID:name ASSIGN newExp:e SEMICOLON  
-            {: RESULT = new AstDecVar(lexer.getLine(), t, name, e); :}
+            {: RESULT = new AstDecVar(t, name, e, tleft + 1); :}
          ;
 
 /****************/
@@ -185,28 +188,28 @@ paramList ::= param:p
 decFunc ::=
       type:t ID:name LPAREN RPAREN
       LBRACE stmtList:body RBRACE
-      {: RESULT = new AstDecFunc(lexer.getLine(), t, name, null, body); :}
+      {: RESULT = new AstDecFunc(t, name, null, body, tleft + 1); :}
 
     | type:t ID:name LPAREN paramList:params RPAREN
       LBRACE stmtList:body RBRACE
-      {: RESULT = new AstDecFunc(lexer.getLine(), t, name, params, body); :}
+      {: RESULT = new AstDecFunc(t, name, params, body, tleft + 1); :}
     ;
 
 /*****************/
 /* CLASS DEC     */
 /*****************/
-decClass ::= CLASS ID:name LBRACE cFieldList:f RBRACE
-             {: RESULT = new AstDecClass(lexer.getLine(), name, null, f); :}
-           | CLASS ID:name EXTENDS ID:parent 
+decClass ::= CLASS:c ID:name LBRACE cFieldList:f RBRACE
+             {: RESULT = new AstDecClass(name, null, f, cleft + 1); :}
+           | CLASS:c ID:name EXTENDS ID:parent 
              LBRACE cFieldList:f RBRACE
-             {: RESULT = new AstDecClass(lexer.getLine(), name, parent, f); :}
+             {: RESULT = new AstDecClass(name, parent, f, cleft + 1); :}
            ;
 
 /*************************/
 /* ARRAY TYPEDEF DEC     */
 /*************************/
 arrayTypedef ::= ARRAY ID:name EQ type:t LBRACK RBRACK SEMICOLON
-                 {: RESULT = new AstDecArrayTypedef(lexer.getLine(), name, t); :}
+                 {: RESULT = new AstDecArrayTypedef(name, t); :}
                ;
 
 /***********************/
@@ -270,13 +273,13 @@ expList ::= exp:e                        {: RESULT = new AstExpList(e, null); :}
 /************/
 exp ::= var:v                              {: RESULT = v; :}
       | LPAREN exp:e RPAREN                {: RESULT = new AstExpParen(e); :}
-      | exp:e1 PLUS exp:e2                 {: RESULT = new AstExpBinop(e1, e2, 0); :}
-      | exp:e1 MINUS exp:e2                {: RESULT = new AstExpBinop(e1, e2, 1); :}
-      | exp:e1 TIMES exp:e2                {: RESULT = new AstExpBinop(e1, e2, 2); :}
-      | exp:e1 DIVIDE exp:e2               {: RESULT = new AstExpBinop(e1, e2, 3); :}
-      | exp:e1 LT exp:e2                   {: RESULT = new AstExpBinop(e1, e2, 4); :}
-      | exp:e1 GT exp:e2                   {: RESULT = new AstExpBinop(e1, e2, 5); :}
-      | exp:e1 EQ exp:e2                   {: RESULT = new AstExpBinop(e1, e2, 6); :}
+      | exp:e1 PLUS exp:e2                 {: RESULT = new AstExpBinop(e1, e2, AstExpBinop.OP_PLUS); :}
+      | exp:e1 MINUS exp:e2                {: RESULT = new AstExpBinop(e1, e2, AstExpBinop.OP_MINUS); :}
+      | exp:e1 TIMES exp:e2                {: RESULT = new AstExpBinop(e1, e2, AstExpBinop.OP_TIMES); :}
+      | exp:e1 DIVIDE exp:e2               {: RESULT = new AstExpBinop(e1, e2, AstExpBinop.OP_DIVIDE); :}
+      | exp:e1 LT exp:e2                   {: RESULT = new AstExpBinop(e1, e2, AstExpBinop.OP_LT); :}
+      | exp:e1 GT exp:e2                   {: RESULT = new AstExpBinop(e1, e2, AstExpBinop.OP_GT); :}
+      | exp:e1 EQ exp:e2                   {: RESULT = new AstExpBinop(e1, e2, AstExpBinop.OP_EQ); :}
       | callExp:c                          {: RESULT = c; :}
       | MINUS INT:i                        {: RESULT = new AstExpInt(-i); :}
       | INT:i                              {: RESULT = new AstExpInt(i); :}
@@ -296,13 +299,13 @@ newExp ::= NEW type:t                         {: RESULT = new AstExpNewClass(t);
 /****************/
 stmt ::=
          type:t ID:name SEMICOLON
-            {: RESULT = new AstStmtDecVar(new AstDecVar(lexer.getLine(), t, name, null)); :}
+            {: RESULT = new AstStmtDecVar(new AstDecVar(t, name, null, tleft + 1)); :}
 
        | type:t ID:name ASSIGN exp:e SEMICOLON
-            {: RESULT = new AstStmtDecVar(new AstDecVar(lexer.getLine(), t, name, e)); :}
+            {: RESULT = new AstStmtDecVar(new AstDecVar(t, name, e, tleft + 1)); :}
 
        | type:t ID:name ASSIGN newExp:e SEMICOLON
-            {: RESULT = new AstStmtDecVar(new AstDecVar(lexer.getLine(), t, name, e)); :}
+            {: RESULT = new AstStmtDecVar(new AstDecVar(t, name, e, tleft + 1)); :}
 
        | var:v ASSIGN exp:e SEMICOLON
          {: RESULT = new AstStmtAssign(v, e); :}

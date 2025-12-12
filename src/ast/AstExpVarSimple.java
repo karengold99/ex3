@@ -20,8 +20,7 @@ public class AstExpVarSimple extends AstExpVar
 		/* SET A UNIQUE SERIAL NUMBER */
 		/******************************/
 		serialNumber = AstNodeSerialNumber.getFresh();
-
-		System.out.format("====================== var -> ID( %s )\n",name);
+		// System.out.format("====================== var -> ID( %s )\n", name);
 		this.name = name;
 	}
 

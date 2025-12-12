@@ -36,7 +36,7 @@ public class AstStmtWhile extends AstStmt
 		// PDF 2.5: condition must be int
 		Type condType = cond.semantMe();
 		if (!condType.isInt())
-			throw new SemanticException(lineNumber, "while condition must be int");
+			throw new SemanticException(cond.lineNumber, "while condition must be int");
 
 		// Begin scope for while body
 		SymbolTable.getInstance().beginScope();

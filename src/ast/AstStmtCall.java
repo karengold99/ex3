@@ -1,39 +1,33 @@
 package ast;
 
+import types.*;
+import semantic.SemanticException;
+
 public class AstStmtCall extends AstStmt
 {
-	/****************/
-	/* DATA MEMBERS */
-	/****************/
 	public AstExpCall callExp;
 	
-	/******************/
-	/* CONSTRUCTOR(S) */
-	/******************/
 	public AstStmtCall(AstExpCall callExp)
 	{
-		/******************************/
-		/* SET A UNIQUE SERIAL NUMBER */
-		/******************************/
 		serialNumber = AstNodeSerialNumber.getFresh();
-
+		// Debug disabled: 0
 		this.callExp = callExp;
 	}
 	
 	public void printMe()
 	{
-		callExp.printMe();
+		if (callExp != null) callExp.printMe();
 
-		/***************************************/
-		/* PRINT Node to AST GRAPHVIZ DOT file */
-		/***************************************/
-		AstGraphviz.getInstance().logNode(
-                serialNumber,
-			String.format("STMT\nCALL"));
-		
-		/****************************************/
-		/* PRINT Edges to AST GRAPHVIZ DOT file */
-		/****************************************/
-		AstGraphviz.getInstance().logEdge(serialNumber,callExp.serialNumber);
+		AstGraphviz.getInstance().logNode(serialNumber, "STMT\nCALL");
+		if (callExp != null) AstGraphviz.getInstance().logEdge(serialNumber, callExp.serialNumber);
+	}
+
+	@Override
+	public Type semantMe() throws SemanticException
+	{
+		// Just delegate to the call expression
+		if (callExp != null)
+			callExp.semantMe();
+		return null;
 	}
 }

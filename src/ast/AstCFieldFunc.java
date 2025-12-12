@@ -7,9 +7,10 @@ public class AstCFieldFunc extends AstCField {
 	public AstDecFunc funcDec;
 
 	public AstCFieldFunc(AstDecFunc funcDec) {
-		super(funcDec.lineNumber);
 		serialNumber = AstNodeSerialNumber.getFresh();
 		this.funcDec = funcDec;
+		// Use funcDec's line number for better error reporting
+		this.lineNumber = funcDec.lineNumber;
 	}
 
 	public void printMe() {

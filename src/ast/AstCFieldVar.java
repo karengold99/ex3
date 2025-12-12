@@ -7,9 +7,10 @@ public class AstCFieldVar extends AstCField {
 	public AstDecVar varDec;
 
 	public AstCFieldVar(AstDecVar varDec) {
-		super(varDec.lineNumber);
 		serialNumber = AstNodeSerialNumber.getFresh();
 		this.varDec = varDec;
+		// Use varDec's line number for better error reporting
+		this.lineNumber = varDec.lineNumber;
 	}
 
 	public void printMe() {
