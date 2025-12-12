@@ -14,7 +14,7 @@ public class AstExpVarSubscript extends AstExpVar
 	public AstExpVarSubscript(AstExpVar var, AstExp subscript)
 	{
 		serialNumber = AstNodeSerialNumber.getFresh();
-		System.out.print("====================== var -> var [ exp ]\n");
+		// Debug disabled: 0
 		this.var = var;
 		this.subscript = subscript;
 	}
@@ -55,12 +55,10 @@ public class AstExpVarSubscript extends AstExpVar
 		if (!subscriptType.isInt())
 			throw new SemanticException(lineNumber, "array subscript must be int");
 
-		// PDF 2.3: If subscript is constant, must be >= 0
-		if (subscript instanceof AstExpInt) {
-			int val = ((AstExpInt) subscript).value;
-			if (val < 0)
-				throw new SemanticException(lineNumber, "array subscript cannot be negative constant");
-		}
+		// PDF 2.3: If subscript is constant expression, must be >= 0
+		Integer constVal = subscript.getConstantValue();
+		if (constVal != null && constVal < 0)
+			throw new SemanticException(subscript.lineNumber, "array subscript cannot be negative constant");
 
 		// Return element type of array
 		TypeArray arrType = (TypeArray) varType;
