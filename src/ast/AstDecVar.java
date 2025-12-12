@@ -15,13 +15,9 @@ public class AstDecVar extends AstDec {
 	/******************/
 	/* CONSTRUCTOR(S) */
 	/******************/
-	public AstDecVar(int lineNumber, String type, String name, AstExp initialValue) {
-		super(lineNumber);
-		/******************************/
-		/* SET A UNIQUE SERIAL NUMBER */
-		/******************************/
+	public AstDecVar(String type, String name, AstExp initialValue, int line) {
 		serialNumber = AstNodeSerialNumber.getFresh();
-
+		this.lineNumber = line;  // Override default line number
 		this.type = type;
 		this.name = name;
 		this.initialValue = initialValue;
@@ -86,7 +82,7 @@ public class AstDecVar extends AstDec {
 		// 5. Enter variable into symbol table
 		SymbolTable.getInstance().enter(name, t);
 
-		return null;
+		return t;
 	}
 
 }
