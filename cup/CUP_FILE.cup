@@ -273,13 +273,13 @@ expList ::= exp:e                        {: RESULT = new AstExpList(e, null); :}
 /************/
 exp ::= var:v                              {: RESULT = v; :}
       | LPAREN exp:e RPAREN                {: RESULT = new AstExpParen(e); :}
-      | exp:e1 PLUS exp:e2                 {: RESULT = new AstExpBinop(e1, e2, 0); :}
-      | exp:e1 MINUS exp:e2                {: RESULT = new AstExpBinop(e1, e2, 1); :}
-      | exp:e1 TIMES exp:e2                {: RESULT = new AstExpBinop(e1, e2, 2); :}
-      | exp:e1 DIVIDE exp:e2               {: RESULT = new AstExpBinop(e1, e2, 3); :}
-      | exp:e1 LT exp:e2                   {: RESULT = new AstExpBinop(e1, e2, 4); :}
-      | exp:e1 GT exp:e2                   {: RESULT = new AstExpBinop(e1, e2, 5); :}
-      | exp:e1 EQ exp:e2                   {: RESULT = new AstExpBinop(e1, e2, 6); :}
+      | exp:e1 PLUS exp:e2                 {: RESULT = new AstExpBinop(e1, e2, AstExpBinop.OP_PLUS); :}
+      | exp:e1 MINUS exp:e2                {: RESULT = new AstExpBinop(e1, e2, AstExpBinop.OP_MINUS); :}
+      | exp:e1 TIMES exp:e2                {: RESULT = new AstExpBinop(e1, e2, AstExpBinop.OP_TIMES); :}
+      | exp:e1 DIVIDE exp:e2               {: RESULT = new AstExpBinop(e1, e2, AstExpBinop.OP_DIVIDE); :}
+      | exp:e1 LT exp:e2                   {: RESULT = new AstExpBinop(e1, e2, AstExpBinop.OP_LT); :}
+      | exp:e1 GT exp:e2                   {: RESULT = new AstExpBinop(e1, e2, AstExpBinop.OP_GT); :}
+      | exp:e1 EQ exp:e2                   {: RESULT = new AstExpBinop(e1, e2, AstExpBinop.OP_EQ); :}
       | callExp:c                          {: RESULT = c; :}
       | MINUS INT:i                        {: RESULT = new AstExpInt(-i); :}
       | INT:i                              {: RESULT = new AstExpInt(i); :}
