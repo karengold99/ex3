@@ -47,11 +47,6 @@ public class TypeFunction extends Type
     /** Get number of parameters */
     public int paramCount()
     {
-        int count = 0;
-        for (TypeList it = params; it != null; it = it.tail) 
-        {
-            count++;
-        }
-        return count;
+        return params != null ? params.size() : 0;
     }
 }
