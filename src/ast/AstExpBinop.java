@@ -23,7 +23,7 @@ public class AstExpBinop extends AstExp
 		/***************************************/
 		/* PRINT CORRESPONDING DERIVATION RULE */
 		/***************************************/
-		System.out.print("====================== exp -> exp BINOP exp\n");
+		// Debug disabled: 0
 
 		/*******************************/
 		/* COPY INPUT DATA MENBERS ... */
@@ -126,4 +126,19 @@ public class AstExpBinop extends AstExp
 		throw new SemanticException(lineNumber, "unknown binary operator");
 	}
 
+	@Override
+	public Integer getConstantValue() {
+		Integer leftVal = left.getConstantValue();
+		Integer rightVal = right.getConstantValue();
+		if (leftVal == null || rightVal == null) return null;
+		
+		// op: 0=PLUS, 1=MINUS, 2=TIMES, 3=DIVIDE
+		switch (op) {
+			case 0: return leftVal + rightVal;
+			case 1: return leftVal - rightVal;
+			case 2: return leftVal * rightVal;
+			case 3: return rightVal == 0 ? null : leftVal / rightVal;
+			default: return null;
+		}
+	}
 }
