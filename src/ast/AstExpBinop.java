@@ -5,7 +5,15 @@ import semantic.SemanticException;
 
 public class AstExpBinop extends AstExp
 {
-	// op: 0=PLUS, 1=MINUS, 2=TIMES, 3=DIVIDE, 4=LT, 5=GT, 6=EQ
+	// Operator constants
+	public static final int OP_PLUS = 0;
+	public static final int OP_MINUS = 1;
+	public static final int OP_TIMES = 2;
+	public static final int OP_DIVIDE = 3;
+	public static final int OP_LT = 4;
+	public static final int OP_GT = 5;
+	public static final int OP_EQ = 6;
+
 	public int op;
 	public AstExp left;
 	public AstExp right;
@@ -38,18 +46,7 @@ public class AstExpBinop extends AstExp
 	/*************************************************/
 	public void printMe()
 	{
-		String sop="";
-		
-		/*********************************/
-		/* CONVERT OP to a printable sop */
-		/*********************************/
-		if (op == 0) {sop = "+";}
-		if (op == 1) {sop = "-";}
-		if (op == 2) {sop = "*";}
-		if (op == 3) {sop = "/";}
-		if (op == 4) {sop = "<";}
-		if (op == 5) {sop = ">";}
-		if (op == 6) {sop = "=";}
+		String sop = getOpSymbol();
 
 		/**********************************/
 		/* AST NODE TYPE = AST BINOP EXP */
@@ -83,9 +80,7 @@ public class AstExpBinop extends AstExp
 		Type t1 = left.semantMe();
 		Type t2 = right.semantMe();
 		
-		// op: 0=PLUS, 1=MINUS, 2=TIMES, 3=DIVIDE, 4=LT, 5=GT, 6=EQ
-		
-		if (op == 0) // PLUS
+		if (op == OP_PLUS)
 		{
 			// PDF 2.6: + works on int+int or string+string
 			if (t1.isInt() && t2.isInt())
@@ -94,28 +89,28 @@ public class AstExpBinop extends AstExp
 				return TypeString.getInstance();
 			throw new SemanticException(lineNumber, "'+' requires two ints or two strings");
 		}
-		else if (op >= 1 && op <= 3) // MINUS, TIMES, DIVIDE
+		else if (op == OP_MINUS || op == OP_TIMES || op == OP_DIVIDE)
 		{
 			// PDF 2.6: -, *, / only work on int
 			if (!t1.isInt() || !t2.isInt())
 				throw new SemanticException(lineNumber, "arithmetic operator requires int operands");
 			
 			// PDF 2.6: Division by constant 0 is error
-			if (op == 3 && right instanceof AstExpInt) {
+			if (op == OP_DIVIDE && right instanceof AstExpInt) {
 				int val = ((AstExpInt) right).value;
 				if (val == 0)
 					throw new SemanticException(lineNumber, "division by zero");
 			}
 			return TypeInt.getInstance();
 		}
-		else if (op == 4 || op == 5) // LT, GT
+		else if (op == OP_LT || op == OP_GT)
 		{
 			// PDF 2.6: <, > only work on int
 			if (!t1.isInt() || !t2.isInt())
 				throw new SemanticException(lineNumber, "comparison operator requires int operands");
 			return TypeInt.getInstance();
 		}
-		else if (op == 6) // EQ
+		else if (op == OP_EQ)
 		{
 			// PDF 2.6: = equality testing
 			if (!TypeUtils.canCompareEquality(t1, t2))
@@ -132,13 +127,26 @@ public class AstExpBinop extends AstExp
 		Integer rightVal = right.getConstantValue();
 		if (leftVal == null || rightVal == null) return null;
 		
-		// op: 0=PLUS, 1=MINUS, 2=TIMES, 3=DIVIDE
 		switch (op) {
-			case 0: return leftVal + rightVal;
-			case 1: return leftVal - rightVal;
-			case 2: return leftVal * rightVal;
-			case 3: return rightVal == 0 ? null : leftVal / rightVal;
+			case OP_PLUS:   return leftVal + rightVal;
+			case OP_MINUS:  return leftVal - rightVal;
+			case OP_TIMES:  return leftVal * rightVal;
+			case OP_DIVIDE: return rightVal == 0 ? null : leftVal / rightVal;
 			default: return null;
+		}
+	}
+
+	/** Get the symbol string for this operator */
+	private String getOpSymbol() {
+		switch (op) {
+			case OP_PLUS:   return "+";
+			case OP_MINUS:  return "-";
+			case OP_TIMES:  return "*";
+			case OP_DIVIDE: return "/";
+			case OP_LT:     return "<";
+			case OP_GT:     return ">";
+			case OP_EQ:     return "=";
+			default:        return "?";
 		}
 	}
 }
