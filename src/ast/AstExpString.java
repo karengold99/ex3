@@ -16,8 +16,7 @@ public class AstExpString extends AstExp
 		/* SET A UNIQUE SERIAL NUMBER */
 		/******************************/
 		serialNumber = AstNodeSerialNumber.getFresh();
-
-		System.out.format("====================== exp -> STRING( %s )\n", value);
+		// System.out.format("====================== exp -> STRING( %s )\n", value); // Debug disabled
 		this.value = value;
 	}
 

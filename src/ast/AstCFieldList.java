@@ -8,8 +8,9 @@ public class AstCFieldList extends AstNode {
 	public AstCFieldList tail;
 
 	public AstCFieldList(AstCField head, AstCFieldList tail) {
-		super(head != null ? head.lineNumber : 0);
 		serialNumber = AstNodeSerialNumber.getFresh();
+		// if (tail != null) System.out.print("====================== cFieldList -> cField cFieldList\n");
+		// if (tail == null) System.out.print("====================== cFieldList -> cField\n");
 		this.head = head;
 		this.tail = tail;
 	}
