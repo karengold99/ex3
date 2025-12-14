@@ -5,10 +5,10 @@ import semantic.SemanticException;
 
 public abstract class AstNode {
 	public int serialNumber;
-	public int lineNumber;
+	public static int staticLine = 0;  // Set by parser on each token
+	public int lineNumber = staticLine;
 
 	public AstNode() {
-		this.lineNumber = 0;
 	}
 
 	public AstNode(int lineNumber) {

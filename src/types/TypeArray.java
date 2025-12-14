@@ -10,6 +10,11 @@ public class TypeArray extends Type
         this.elementType = elementType;
     }
 
+    public TypeArray(String name, Type elementType)
+    {
+        super(name);
+        this.elementType = elementType;
+    }
 
     /*==================================================================*/
     /*                    TYPE CHECKS                                   */
