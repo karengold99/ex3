@@ -43,4 +43,9 @@ public class AstExpInt extends AstExp
 	{
 		return TypeInt.getInstance();
 	}
+
+	@Override
+	public Integer getConstantValue() {
+		return value;
+	}
 }
