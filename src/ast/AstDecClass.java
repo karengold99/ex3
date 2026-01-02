@@ -119,14 +119,4 @@ public class AstDecClass extends AstDec {
 
 		return null;
 	}
-
-	@Override
-	public Temp irMe()
-	{
-		// Generate IR for methods in the class
-		if (dataMembers != null) {
-			dataMembers.irMe();
-		}
-		return null;
-	}
 }
