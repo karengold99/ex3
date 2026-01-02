@@ -3,6 +3,7 @@ package ast;
 import types.*;
 import semantic.SemanticException;
 import symboltable.*;
+import temp.*;
 
 public class AstDecClass extends AstDec {
 	public String name;
@@ -12,7 +13,6 @@ public class AstDecClass extends AstDec {
 	public AstDecClass(String name, String parentName, AstCFieldList dataMembers, int line) {
 		serialNumber = AstNodeSerialNumber.getFresh();
 		this.lineNumber = line;  // Override the default staticLine
-		// System.out.format("====================== classDec -> class %s extends %s { ... }\n", name, parentName); // Debug disabled
 		this.name = name;
 		this.parentName = parentName;
 		this.dataMembers = dataMembers;
@@ -117,6 +117,16 @@ public class AstDecClass extends AstDec {
 		// End class scope
 		SymbolTable.getInstance().endClassScope();
 
+		return null;
+	}
+
+	@Override
+	public Temp irMe()
+	{
+		// Generate IR for methods in the class
+		if (dataMembers != null) {
+			dataMembers.irMe();
+		}
 		return null;
 	}
 }
